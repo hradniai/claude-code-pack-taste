@@ -31,34 +31,36 @@ Then explain what's coming, in one paragraph:
 
 ---
 
-## Step 0.5 — Napsat implementační plán PŘED jakoukoli akcí
+## Step 0.5 — Vyzvi uživatele k plan modu a napiš plán
 
-Než cokoli zkopíruješ, zálohuješ nebo upravíš na uživatelově stroji, **napiš plán** a získej jeho souhlas.
+Než cokoli zkopíruješ, zálohuješ nebo upravíš na stroji, **napiš plán** a získej souhlas. Nejčistší cesta je plan mode, který tě nutí plán prezentovat dřív než exekvuješ.
 
-**Preferovaná cesta: plan mode.**
+**Vyzvi uživatele, ať přepne:**
 
-Pokud je plan mode dostupný (tool `ExitPlanMode` je k dispozici, nebo byla session spuštěna s `--permission-mode plan`), navrhni plán tam. Plan mode tě nutí prezentovat celý plán před jakoukoli exekucí a čeká na explicit schválení. Pro instalaci ideální.
+> „Pro nejbezpečnější instalaci stiskni v terminálu **Shift+Tab** a přepni se do plan modu. V něm můžu jen prezentovat plán — nic nespustím, dokud ho neschválíš. Jakmile Shift+Tab stiskneš, řekni mi, a napíšu plán."
 
-Dobrý plán shrnuje:
-- Výsledky OS + dependency kontroly (z Kroku 1 — spusť ty kontroly NEJDŘÍV, ať plán reflektuje realitu)
+Počkej, až uživatel potvrdí, že přepnul. (Sám plan mode nemusíš spolehlivě detekovat — spolehni se na jeho potvrzení.)
+
+**Pak spusť Krok 1 (read-only pre-flight) a napiš plán.** Dobrý plán shrnuje:
+- Výsledky OS + dependency kontroly (z Kroku 1 — čistě read-only, smí běžet i bez schváleného plánu)
 - Jestli zálohovat stávající `~/.claude/` a kam
-- Workspace location a názvy adresářů (z interview v Kroku 2 — pokud to jde, polož otázku v plan fázi, ať je odpověď v plánu)
+- Workspace location a názvy adresářů
 - Které soubory se zkopírují, kam, a co zůstává netknuté
 - Které credential / personalizační otázky zbývají
 - Přesný seznam příkazů, které spustíš, v pořadí
 
-Když uživatel plán schválí přes plan mode, exit plan mode a vykonej. **Neimprovizuj mimo plán.** Když se objeví něco neočekávaného, zastav, aktualizuj plán, znovu potvrď.
+V plan modu prezentuj plán přes `ExitPlanMode`. Uživatel ho tam schválí, plan mode skončí, ty vykonáš. **Neimprovizuj mimo plán.** Když se objeví něco neočekávaného, zastav, aktualizuj plán, znovu potvrď.
 
-**Záložní cesta: pokud plan mode není dostupný**, udělej totéž v Markdown souboru.
+**Pokud uživatel plan mode odmítne** (řekne, že nechce přepínat, neumí najít Shift+Tab, nebo prostě „jeď bez něj"):
 
 1. Vytvoř `./INSTALL-PLAN.md` v aktuálním adresáři (klonovaný Pack folder).
-2. Napiš stejný plán podle struktury výše.
-3. Uživateli ho ukaž v terminálu (vypiš obsah nebo shrň a řekni, že plný plán je v `./INSTALL-PLAN.md`).
+2. Napiš tam stejný plán.
+3. Uživateli ho ukaž v terminálu (vypiš obsah nebo shrň a odkaž).
 4. Počkej na explicit schválení: „ano", „OK", „pokračuj", „approve", nebo podobně.
 5. Teprve po souhlasu začni vykonávat.
-6. Po dokončení instalace (Krok 11) `./INSTALL-PLAN.md` smaž — byl to pracovní artefakt, ne výstup.
+6. Po dokončení instalace (Krok 11) `./INSTALL-PLAN.md` smaž — pracovní artefakt, ne výstup.
 
-V obou cestách: **žádná destruktivní akce ani kopírování neproběhne, dokud uživatel neschválil písemný plán.** Pre-flight check v Kroku 1 je read-only a může běžet před plánem; vše ostatní čeká.
+V obou cestách: **žádná destruktivní akce ani kopírování neproběhne, dokud uživatel neschválí písemný plán.** Krok 1 (read-only kontroly) je jediná věc, která smí běžet před plánem.
 
 ---
 
