@@ -1,27 +1,44 @@
 Copyright (c) 2026 Šimon Hradní. All rights reserved.
 
-This repository is made publicly visible for the convenience of the Taste agency
-ambassador / power-user cohort. It is NOT open source.
+This repository is shared publicly so that authorized individuals — primarily
+the Taste agency ambassador / power-user cohort, plus any other persons
+authorized in writing by the copyright holder — can install the Pack on their
+machines and use it as their daily Claude Code configuration, including for
+work performed in the course of their employment or engagement.
 
 You may:
-  - View the source code in this repository
-  - Clone the repository for the sole purpose of installing the Pack on your
-    own machine, as instructed in INSTRUCTIONS.md, for personal use
+  - View the source code in this repository.
+  - Clone the repository to install the Pack on machines you use for
+    authorized work.
+  - Use the Pack as your daily Claude Code configuration on those machines —
+    including on client projects, internal projects, and personal projects.
+    The Pack is a working tool. Using it on the work you are paid to do is
+    explicitly permitted.
+  - Modify your local copy to fit your workflow. Add your own rules, skills,
+    hooks, and templates. The Pack is a starting point, not a frozen artifact.
+  - Re-clone or pull updates from this repository to refresh your installation.
 
 You may NOT, without prior written permission from the copyright holder:
-  - Redistribute, publish, mirror, or rehost this repository or any part of it
-  - Use it as the basis for a derivative work that you publish, share, or sell
-  - Sublicense it
-  - Use it in a commercial product or service offering
-  - Use the source code or contents for training machine learning models
+  - Redistribute, republish, mirror, rehost, or otherwise share this
+    repository or any part of it outside the authorized audience. The "fork"
+    button on GitHub remains technically functional — that is a platform
+    limitation, not a permission.
+  - Use the Pack as the basis for a derivative work that you publish, sell,
+    sublicense, or otherwise make available to third parties.
+  - Package the Pack, or a recognisable derivative of it, into a commercial
+    product or service offering of your own.
+  - Use the source code or contents for training machine learning models.
 
-The "fork" button on GitHub remains technically functional — that is a platform
-limitation, not a permission. A fork without written permission is a license
-violation and will be enforced via GitHub's DMCA process.
+The intent of this license: people who are authorized to use the Pack can use
+it freely as a working tool. People who want to take the Pack and turn it into
+their own thing — fork it publicly, sell it, repackage it under another name —
+cannot, without asking first.
+
+Unauthorized redistribution will be enforced via GitHub's DMCA process.
 
 This repository is derived from and incorporates portions of:
 
-  claude-starter-pack by Gillellbor
+  claude-starter-pack
   https://github.com/Gillellbor/claude-starter-pack
   Licensed under the MIT License
 
@@ -30,8 +47,8 @@ under the MIT License, with attribution and the original copyright notice
 preserved. The MIT-licensed upstream notice is reproduced in NOTICE.
 
 Modifications, additions, and the assembled work as a whole are subject to the
-"All rights reserved" terms above. Where the two licenses overlap on a given
-file, the stricter terms apply to that file's modified version.
+terms above. Where the two licenses overlap on a given file, the stricter terms
+apply to that file's modified version.
 
-For permission to use this work beyond the limited rights granted above,
-contact: simon@hradni.net
+For permission to use this work in ways not covered above, contact:
+simon@hradni.net

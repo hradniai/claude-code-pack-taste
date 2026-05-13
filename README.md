@@ -76,8 +76,10 @@ What changed in this fork:
 
 ## License
 
-**All rights reserved.** This Pack is shared publicly for the convenience of the Taste ambassador cohort. It is **not open source** — you may clone it to install it on your own machine, but you may not redistribute, fork, or use it as the basis for a derivative work without written permission.
+**All rights reserved.** This Pack is shared publicly so the Taste ambassador cohort (and other authorized individuals) can install it and use it as their daily Claude Code configuration — including for client work. That use is explicitly permitted.
+
+What's **not** permitted without written approval: redistributing, republishing, rehosting, forking publicly, packaging it as a commercial product or service offering of your own, or using the contents for ML model training.
 
 This Pack is derived from [Gillellbor/claude-starter-pack](https://github.com/Gillellbor/claude-starter-pack), which is MIT-licensed. The MIT-licensed upstream portions retain their original license. See `LICENSE` and `NOTICE` for the full terms.
 
-For permission to use this work beyond cloning it for personal install: simon@hradni.net
+For permissions beyond what the license covers: simon@hradni.net
