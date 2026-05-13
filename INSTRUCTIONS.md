@@ -31,6 +31,37 @@ Then explain what's coming, in one paragraph:
 
 ---
 
+## Step 0.5 — Napsat implementační plán PŘED jakoukoli akcí
+
+Než cokoli zkopíruješ, zálohuješ nebo upravíš na uživatelově stroji, **napiš plán** a získej jeho souhlas.
+
+**Preferovaná cesta: plan mode.**
+
+Pokud je plan mode dostupný (tool `ExitPlanMode` je k dispozici, nebo byla session spuštěna s `--permission-mode plan`), navrhni plán tam. Plan mode tě nutí prezentovat celý plán před jakoukoli exekucí a čeká na explicit schválení. Pro instalaci ideální.
+
+Dobrý plán shrnuje:
+- Výsledky OS + dependency kontroly (z Kroku 1 — spusť ty kontroly NEJDŘÍV, ať plán reflektuje realitu)
+- Jestli zálohovat stávající `~/.claude/` a kam
+- Workspace location a názvy adresářů (z interview v Kroku 2 — pokud to jde, polož otázku v plan fázi, ať je odpověď v plánu)
+- Které soubory se zkopírují, kam, a co zůstává netknuté
+- Které credential / personalizační otázky zbývají
+- Přesný seznam příkazů, které spustíš, v pořadí
+
+Když uživatel plán schválí přes plan mode, exit plan mode a vykonej. **Neimprovizuj mimo plán.** Když se objeví něco neočekávaného, zastav, aktualizuj plán, znovu potvrď.
+
+**Záložní cesta: pokud plan mode není dostupný**, udělej totéž v Markdown souboru.
+
+1. Vytvoř `./INSTALL-PLAN.md` v aktuálním adresáři (klonovaný Pack folder).
+2. Napiš stejný plán podle struktury výše.
+3. Uživateli ho ukaž v terminálu (vypiš obsah nebo shrň a řekni, že plný plán je v `./INSTALL-PLAN.md`).
+4. Počkej na explicit schválení: „ano", „OK", „pokračuj", „approve", nebo podobně.
+5. Teprve po souhlasu začni vykonávat.
+6. Po dokončení instalace (Krok 11) `./INSTALL-PLAN.md` smaž — byl to pracovní artefakt, ne výstup.
+
+V obou cestách: **žádná destruktivní akce ani kopírování neproběhne, dokud uživatel neschválil písemný plán.** Pre-flight check v Kroku 1 je read-only a může běžet před plánem; vše ostatní čeká.
+
+---
+
 ## Step 1 — Pre-flight check
 
 Run these checks and report results in a single message.
