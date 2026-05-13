@@ -1,0 +1,37 @@
+Copyright (c) 2026 Šimon Hradní. All rights reserved.
+
+This repository is made publicly visible for the convenience of the Taste agency
+ambassador / power-user cohort. It is NOT open source.
+
+You may:
+  - View the source code in this repository
+  - Clone the repository for the sole purpose of installing the Pack on your
+    own machine, as instructed in INSTRUCTIONS.md, for personal use
+
+You may NOT, without prior written permission from the copyright holder:
+  - Redistribute, publish, mirror, or rehost this repository or any part of it
+  - Use it as the basis for a derivative work that you publish, share, or sell
+  - Sublicense it
+  - Use it in a commercial product or service offering
+  - Use the source code or contents for training machine learning models
+
+The "fork" button on GitHub remains technically functional — that is a platform
+limitation, not a permission. A fork without written permission is a license
+violation and will be enforced via GitHub's DMCA process.
+
+This repository is derived from and incorporates portions of:
+
+  claude-starter-pack by Gillellbor
+  https://github.com/Gillellbor/claude-starter-pack
+  Licensed under the MIT License
+
+The portions of this repository that originate from the upstream project remain
+under the MIT License, with attribution and the original copyright notice
+preserved. The MIT-licensed upstream notice is reproduced in NOTICE.
+
+Modifications, additions, and the assembled work as a whole are subject to the
+"All rights reserved" terms above. Where the two licenses overlap on a given
+file, the stricter terms apply to that file's modified version.
+
+For permission to use this work beyond the limited rights granted above,
+contact: simon@hradni.net
