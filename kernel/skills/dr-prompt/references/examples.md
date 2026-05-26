@@ -100,7 +100,7 @@ To conduct a comprehensive technical review of current hydrogen storage technolo
 <RESEARCH_PROMPT>
 
 ## OBJECTIVE
-Develop a comprehensive company profile of ochutnejorech.cz (Czech e-shop specializing in nuts, dried fruits, and healthy snacks) to provide deep context for AI-driven marketing and business analysis. Map both visible customer-facing elements and underlying brand DNA.
+Develop a comprehensive company profile of the target company (here: a Czech e-shop specializing in nuts, dried fruits, and healthy snacks) to provide deep context for AI-driven marketing and business analysis. Map both visible customer-facing elements and underlying brand DNA.
 
 ## SCOPE
 - **Timeframe:** Current state (2025)
@@ -136,8 +136,8 @@ Develop a comprehensive company profile of ochutnejorech.cz (Czech e-shop specia
 10. What is the mission, vision, brand personality, characteristic DNA?
 
 ### Market Position
-11. Who are direct competitors (Grizly, Svět oříšků, Oříškovna)?
-12. Who are indirect competitors (supermarkets, Rohlík, Košík)?
+11. Who are direct competitors (identify the main specialist players in the category)?
+12. Who are indirect competitors (supermarkets, major grocery-delivery services)?
 13. What is their main USP and differentiation?
 
 ## DEPTH REQUIREMENTS
