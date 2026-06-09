@@ -1,6 +1,6 @@
-# Instructions for Claude — Pack Installation
+# Instructions for Claude - Pack Installation
 
-You are reading this because the user just cloned the Claude Code Pack and ran `claude` in the repo root. Your job is to walk them through installation **safely and interactively**, with explicit confirmation at every major step. Treat the user as a smart power-user who hasn't done this before — explain what each step does, ask before touching anything outside the repo, and respect their preferences (path, OS, names).
+You are reading this because the user just cloned the Claude Code Pack and ran `claude` in the repo root. Your job is to walk them through installation **safely and interactively**, with explicit confirmation at every major step. Treat the user as a smart power-user who hasn't done this before - explain what each step does, ask before touching anything outside the repo, and respect their preferences (path, OS, names).
 
 **Hard rules for this install session:**
 - Do not silently run install commands. Show the command, get approval, then execute.
@@ -8,12 +8,12 @@ You are reading this because the user just cloned the Claude Code Pack and ran `
 - Terse, no narration. The user can read.
 - If the user says "skip this", skip it and note what was skipped.
 - If anything fails, stop. Don't continue to the next step.
-- Never use `rm -rf` during install — use `mv` to a backup path instead.
+- Never use `rm -rf` during install - use `mv` to a backup path instead.
 - Never use `sudo`. If something requires it, instruct the user to run that one command manually.
 
 ---
 
-## Step 0 — Greet, confirm intent, set the frame
+## Step 0 - Greet, confirm intent, set the frame
 
 Open with:
 
@@ -24,25 +24,25 @@ Wait for explicit yes.
 Then explain what's coming, in one paragraph:
 
 > Instalace má dvě části:
-> 1. **Kernel** — globální nastavení do `~/.claude/` (settings, hooks, rules, skills, statusline). Pravidla pro to, co Claude smí a nesmí, plus pomocné nástroje.
-> 2. **Workspace** — adresářová struktura pro tvou práci (klienti, vlastní projekty, nástroje, kontext). Tu si umístíš kam chceš.
+> 1. **Kernel** - globální nastavení do `~/.claude/` (settings, hooks, rules, skills, statusline). Pravidla pro to, co Claude smí a nesmí, plus pomocné nástroje.
+> 2. **Workspace** - adresářová struktura pro tvou práci (klienti, vlastní projekty, nástroje, kontext). Tu si umístíš kam chceš.
 >
 > Před každou částí se zeptám na tvé preference. Pokud někde už máš svůj setup, zálohujeme ho, nepřepisujeme.
 
 ---
 
-## Step 0.5 — Vyzvi uživatele k plan modu a napiš plán
+## Step 0.5 - Vyzvi uživatele k plan modu a napiš plán
 
 Než cokoli zkopíruješ, zálohuješ nebo upravíš na stroji, **napiš plán** a získej souhlas. Nejčistší cesta je plan mode, který tě nutí plán prezentovat dřív než exekvuješ.
 
 **Vyzvi uživatele, ať přepne:**
 
-> „Pro nejbezpečnější instalaci stiskni v terminálu **Shift+Tab** a přepni se do plan modu. V něm můžu jen prezentovat plán — nic nespustím, dokud ho neschválíš. Jakmile Shift+Tab stiskneš, řekni mi, a napíšu plán."
+> „Pro nejbezpečnější instalaci stiskni v terminálu **Shift+Tab** a přepni se do plan modu. V něm můžu jen prezentovat plán - nic nespustím, dokud ho neschválíš. Jakmile Shift+Tab stiskneš, řekni mi, a napíšu plán."
 
-Počkej, až uživatel potvrdí, že přepnul. (Sám plan mode nemusíš spolehlivě detekovat — spolehni se na jeho potvrzení.)
+Počkej, až uživatel potvrdí, že přepnul. (Sám plan mode nemusíš spolehlivě detekovat - spolehni se na jeho potvrzení.)
 
 **Pak spusť Krok 1 (read-only pre-flight) a napiš plán.** Dobrý plán shrnuje:
-- Výsledky OS + dependency kontroly (z Kroku 1 — čistě read-only, smí běžet i bez schváleného plánu)
+- Výsledky OS + dependency kontroly (z Kroku 1 - čistě read-only, smí běžet i bez schváleného plánu)
 - Jestli zálohovat stávající `~/.claude/` a kam
 - Workspace location a názvy adresářů
 - Které soubory se zkopírují, kam, a co zůstává netknuté
@@ -58,13 +58,13 @@ V plan modu prezentuj plán přes `ExitPlanMode`. Uživatel ho tam schválí, pl
 3. Uživateli ho ukaž v terminálu (vypiš obsah nebo shrň a odkaž).
 4. Počkej na explicit schválení: „ano", „OK", „pokračuj", „approve", nebo podobně.
 5. Teprve po souhlasu začni vykonávat.
-6. Po dokončení instalace (Krok 11) `./INSTALL-PLAN.md` smaž — pracovní artefakt, ne výstup.
+6. Po dokončení instalace (Krok 11) `./INSTALL-PLAN.md` smaž - pracovní artefakt, ne výstup.
 
 V obou cestách: **žádná destruktivní akce ani kopírování neproběhne, dokud uživatel neschválí písemný plán.** Krok 1 (read-only kontroly) je jediná věc, která smí běžet před plánem.
 
 ---
 
-## Step 1 — Pre-flight check
+## Step 1 - Pre-flight check
 
 Run these checks and report results in a single message.
 
@@ -100,9 +100,9 @@ done
 
 If **all present**, continue.
 
-If **anything is missing**, stop and give the user OS-specific install commands. Do NOT install dependencies yourself — that's a system change that needs the user's explicit choice of how to manage their package manager.
+If **anything is missing**, stop and give the user OS-specific install commands. Do NOT install dependencies yourself - that's a system change that needs the user's explicit choice of how to manage their package manager.
 
-**macOS — recommended via Homebrew:**
+**macOS - recommended via Homebrew:**
 ```bash
 # If brew itself is missing:
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -137,25 +137,25 @@ Report: does `~/.claude/` exist, is there a `settings.json`, is there a `.env`. 
 
 ---
 
-## Step 2 — Workspace location interview (BEFORE touching ~/.claude/)
+## Step 2 - Workspace location interview (BEFORE touching ~/.claude/)
 
-This is the most important preference question. The Pack ships with four workspace directories — `_CONTEXT`, `_CLIENTS`, `_BUSINESS`, `_APPS` — and you must NOT assume where they go. Different users want them in different places.
+This is the most important preference question. The Pack ships with four workspace directories - `_CONTEXT`, `_CLIENTS`, `_BUSINESS`, `_APPS` - and you must NOT assume where they go. Different users want them in different places.
 
 Ask the user:
 
 > Pack obsahuje čtyři workspace adresáře:
-> - `_CONTEXT/` — tvůj osobní profil, poznámky, best-practices
-> - `_CLIENTS/` — per-klient složky
-> - `_BUSINESS/` — vlastní byznys (projekty, vzdělávání, interní)
-> - `_APPS/` — nástroje a appky, které stavíš
+> - `_CONTEXT/` - tvůj osobní profil, poznámky, best-practices
+> - `_CLIENTS/` - per-klient složky
+> - `_BUSINESS/` - vlastní byznys (projekty, vzdělávání, interní)
+> - `_APPS/` - nástroje a appky, které stavíš
 >
 > **Kam je chceš umístit?**
-> 1. `~/Documents/` (default — viditelné ve Finderu, snadné mít přes ruku)
+> 1. `~/Documents/` (default - viditelné ve Finderu, snadné mít přes ruku)
 > 2. `~/` (přímo v home directory)
-> 3. `~/Documents/Work/` nebo jiná podsložka — řekni jakou
+> 3. `~/Documents/Work/` nebo jiná podsložka - řekni jakou
 > 4. Mimo home, např. `/Volumes/Work/` (externí disk) nebo `~/Code/`
 >
-> Cesty s mezerami fungují, ale doporučuju je nepoužívat — Bash je nemá rád.
+> Cesty s mezerami fungují, ale doporučuju je nepoužívat - Bash je nemá rád.
 
 Store the chosen base path. **Use it for the rest of the install.** Never fall back to `~/Documents/` after they chose something else.
 
@@ -167,10 +167,10 @@ Chceš některý z adresářů přejmenovat?
 - Někdo preferuje plain anglické: clients/, business/, apps/, context/.
 - Někdo česky: klienti/, byznys/, appky/, kontext/.
 
-Pošli mi čtyři jména oddělená mezerou pro CONTEXT CLIENTS BUSINESS APPS — nebo Enter pro defaults.
+Pošli mi čtyři jména oddělená mezerou pro CONTEXT CLIENTS BUSINESS APPS - nebo Enter pro defaults.
 ```
 
-Use whatever they say. From this point on, refer to directories by the user's chosen names — not by the defaults.
+Use whatever they say. From this point on, refer to directories by the user's chosen names - not by the defaults.
 
 ### 2b. Conflict check
 
@@ -189,7 +189,7 @@ If any exist: **never overwrite.** Tell the user, and offer:
 
 ---
 
-## Step 3 — Backup existing `~/.claude/`
+## Step 3 - Backup existing `~/.claude/`
 
 If `~/.claude/` exists from Step 1c, propose:
 
@@ -203,7 +203,7 @@ If `~/.claude/` does not exist, skip this step and tell the user.
 
 ---
 
-## Step 4 — Install kernel
+## Step 4 - Install kernel
 
 Show the user what will be copied:
 
@@ -212,24 +212,24 @@ kernel/ → ~/.claude/
 ```
 
 Contents going in:
-- `settings.json` — restrictive baseline; bypass mode locked off
+- `settings.json` - restrictive baseline; bypass mode locked off
 - `AGENTS.md` + `CLAUDE.md` (symlink)
-- `statusline.sh` — 3-line status bar (model · cost / project · ctx / 5h · 7d rate limits)
-- `rules/` — five rules (documentation, respect-denies, subagents, notes, czech-output)
-- `scripts/list-env-keys.sh` — lets Claude see *names* of credential env vars without values
+- `statusline.sh` - 3-line status bar (model · cost / project · ctx / 5h · 7d rate limits)
+- `rules/` - five rules (documentation, respect-denies, subagents, notes, czech-output)
+- `scripts/list-env-keys.sh` - lets Claude see *names* of credential env vars without values
 - `hooks/`:
-  - `bash-safety-extended.py` (PreToolUse Bash) — blocks bypass patterns
-  - `context-bloat-guard.py` (PreToolUse Read) — soft brake on huge file reads
-  - `notes-research.sh` (PostToolUse Edit/Write) — auto-research on `notes.md` markers
-  - `inject-current-time.sh` (UserPromptSubmit) — current time in every prompt
+  - `bash-safety-extended.py` (PreToolUse Bash) - blocks bypass patterns
+  - `context-bloat-guard.py` (PreToolUse Read) - soft brake on huge file reads
+  - `notes-research.sh` (PostToolUse Edit/Write) - auto-research on `notes.md` markers
+  - `inject-current-time.sh` (UserPromptSubmit) - current time in every prompt
 - `skills/setup/`, `skill-creator/`, `prd-creator/`, `dr-prompt/`, `client-data-check/`
-- `templates/` — five scaffolding templates: klient, dev, business, app, general
-- `agents/` — empty placeholder + README
+- `templates/` - five scaffolding templates: klient, dev, business, app, general
+- `agents/` - empty placeholder + README
 
 **Critical:** if `~/.claude/settings.json` already existed in the backup, ask the user whether to:
-1. Replace (default — backup preserved the old one)
+1. Replace (default - backup preserved the old one)
 2. Skip the settings.json copy (keep what they had)
-3. Merge manually — they'll need to open both files and decide
+3. Merge manually - they'll need to open both files and decide
 
 The install does not auto-merge JSON.
 
@@ -256,11 +256,11 @@ Should show `CLAUDE.md -> AGENTS.md`.
 
 ---
 
-## Step 5 — Personal profile interview
+## Step 5 - Personal profile interview
 
 The `user-profile.md` file in `<context-dir>/` is read by Claude across all sessions. The more accurate it is, the more tailored the work.
 
-Quick interview — 4 questions, 1–2 sentences each, or "skip" to leave blank:
+Quick interview - 4 questions, 1–2 sentences each, or "skip" to leave blank:
 
 ```
 1. Tvoje role a hlavní zaměření?
@@ -281,19 +281,19 @@ Write the answers into `<base-path>/<context-dir>/user-profile.md`, replacing th
 
 ---
 
-## Step 6 — Example content choice
+## Step 6 - Example content choice
 
 ```
 Pack obsahuje příklady, které můžeš nechat, přejmenovat nebo smazat:
-- `_CLIENTS/_example-client/` — sample klientská struktura
-- `_CLIENTS/taste/` — připravený scaffold pro Taste (klient autorů Packu)
-- `_APPS/_example-app-transcribe/` — stub appka demonstrující `_APPS` layout
+- `_CLIENTS/_example-client/` - sample klientská struktura
+- `_CLIENTS/taste/` - připravený scaffold pro Taste (klient autorů Packu)
+- `_APPS/_example-app-transcribe/` - stub appka demonstrující `_APPS` layout
 
 Co s nimi?
-1. Nech vše (default — referenční)
+1. Nech vše (default - referenční)
 2. Přejmenuj `_example-client` na reálné jméno klienta (řekni které)
 3. Smaž příklady, ponech `taste/`
-4. Smaž všechny příklady včetně `taste/` — začneš čistě
+4. Smaž všechny příklady včetně `taste/` - začneš čistě
 ```
 
 Apply choice. If deleting, use `mv` to a backup path, not `rm -rf`:
@@ -304,7 +304,7 @@ mv "<base-path>/<clients-dir>/_example-client" "<base-path>/.removed-examples/$(
 
 ---
 
-## Step 7 — Workspace copy
+## Step 7 - Workspace copy
 
 Copy the workspace directories using the user's chosen paths and names from Step 2:
 
@@ -329,9 +329,9 @@ done
 
 ---
 
-## Step 8 — Credential store (`~/.claude/.env`)
+## Step 8 - Credential store (`~/.claude/.env`)
 
-The Pack uses `~/.claude/.env` as the central place for API keys. The `notes-research` hook reads `ANTHROPIC_API_KEY` from this file. Other API keys can be added here too — the `list-env-keys.sh` helper lets Claude see their *names* (not values) when needed.
+The Pack uses `~/.claude/.env` as the central place for API keys. The `notes-research` hook reads `ANTHROPIC_API_KEY` from this file. Other API keys can be added here too - the `list-env-keys.sh` helper lets Claude see their *names* (not values) when needed.
 
 If `~/.claude/.env` doesn't exist, create it with a starter template:
 
@@ -343,7 +343,7 @@ cat > ~/.claude/.env <<'EOF'
 # Required for the notes-research hook (cost: tokens per trigger)
 ANTHROPIC_API_KEY=
 
-# Optional — override the default research model (defaults to Haiku for cost)
+# Optional - override the default research model (defaults to Haiku for cost)
 # ANTHROPIC_MODEL=claude-haiku-4-5-20251001
 
 # Add other API keys as you need them. Examples:
@@ -354,7 +354,7 @@ EOF
 chmod 600 ~/.claude/.env
 ```
 
-Ask the user to add their `ANTHROPIC_API_KEY` value (or skip — auto-research will silently no-op until they add it).
+Ask the user to add their `ANTHROPIC_API_KEY` value (or skip - auto-research will silently no-op until they add it).
 
 Show how the env-keys helper works:
 
@@ -364,21 +364,25 @@ Show how the env-keys helper works:
 
 Their `ANTHROPIC_API_KEY` (and any other credentials they added) should appear by name. Values never appear in the output.
 
+### The one readable exception - `.env.local`
+
+`~/.claude/.env` above is the GLOBAL credential store for hooks; Claude never reads its values. For handing Claude a secret **inside a specific project**, the convention is a per-project `.env.local` - the single file whose values Claude is allowed to read. The deny rules plus the `bash-safety-extended.py` hook block reading every other `.env` / `.env.*` (via `cat`, `source`, redirection, `python -c`, docker bind-mount, or the Read tool); `.env.local` is the deliberate, conscious exception, created on purpose only when Claude genuinely needs a key or token. It stays gitignored via the `.env.*` pattern, so it is never committed. To see only the key NAMES of any other env file, Claude runs `~/.claude/scripts/list-env-keys.sh --from <path>`. One deliberate trade-off: the hook blocks *any* reference to a protected env file, so a command that merely mentions one (a commit message, an `echo`) is blocked too - reword or use the helper. That is intentional: over-block beats leak.
+
 ---
 
-## Step 9 — Verification
+## Step 9 - Verification
 
 Tell the user to **restart their Claude Code session** so the new `settings.json` takes effect. After restart, they can verify:
 
 - `~/.claude/scripts/list-env-keys.sh` returns env var names without values
-- A denied command (e.g. asking Claude to `cat .env`) gets blocked
-- Bypass mode is off — `claude --permission-mode bypassPermissions` should refuse
-- The current-time injection works — at session start, Claude should know the actual time
+- A denied command (e.g. asking Claude to `cat .env`) gets blocked, but a deliberate `.env.local` is readable (the single secret-handoff exception)
+- Bypass mode is off - `claude --permission-mode bypassPermissions` should refuse
+- The current-time injection works - at session start, Claude should know the actual time
 - Statusline appears at the bottom with model · cost · context · rate-limit info
 
 ---
 
-## Step 10 — Lock settings.json
+## Step 10 - Lock settings.json
 
 During this install session, Claude was able to freely edit `~/.claude/settings.json`. **At the end, lock it down.** Future sessions should prompt before any change to the kernel config:
 
@@ -397,26 +401,26 @@ print('settings.json locked: future edits to ~/.claude/settings* require user ap
 "
 ```
 
-After this step, Claude can still modify settings.json — but each modification requires the user to confirm.
+After this step, Claude can still modify settings.json - but each modification requires the user to confirm.
 
 ---
 
-## Step 11 — Hand off
+## Step 11 - Hand off
 
 Tell the user:
 
 > Hotovo. Doporučuju:
-> - Přečíst `docs/safety-model.md` — co všechno se blokuje a proč.
-> - Přečíst `docs/customization.md` — jak Pack rozšiřovat.
-> - Přečíst `docs/prompting-claude.md` — tipy na práci s Claude.
+> - Přečíst `docs/safety-model.md` - co všechno se blokuje a proč.
+> - Přečíst `docs/customization.md` - jak Pack rozšiřovat.
+> - Přečíst `docs/prompting-claude.md` - tipy na práci s Claude.
 >
-> Tento repo můžeš teď smazat — všechno je nainstalováno v `~/.claude/` a tvých workspace adresářích.
+> Tento repo můžeš teď smazat - všechno je nainstalováno v `~/.claude/` a tvých workspace adresářích.
 
 End the install session. Do not proceed to other tasks unless the user asks.
 
 ---
 
-## Error handling — global rules
+## Error handling - global rules
 
 - If any step fails, stop. Do not continue to the next step.
 - If a permission denial occurs during install (e.g. user runs from a path that doesn't allow writes), surface it clearly and propose a fix.
@@ -425,15 +429,15 @@ End the install session. Do not proceed to other tasks unless the user asks.
 
 ---
 
-## Windows native (without WSL) — addendum
+## Windows native (without WSL) - addendum
 
 If the user chose Windows native despite the WSL recommendation:
 
 - Replace `~/.claude/` with `%USERPROFILE%\.claude\` (`$env:USERPROFILE\.claude\` in PowerShell)
 - Replace `~/Documents/` similarly
-- Symlinks require admin rights — instead of `ln -s AGENTS.md CLAUDE.md`, create a hard link or just copy the file (two files to keep in sync — flag this to the user)
+- Symlinks require admin rights - instead of `ln -s AGENTS.md CLAUDE.md`, create a hard link or just copy the file (two files to keep in sync - flag this to the user)
 - `chmod +x` is a no-op on Windows. PowerShell scripts need `Unblock-File` before first run
-- Bash hooks (`*.sh`) won't run natively — they need Git Bash, WSL, or a PowerShell rewrite
+- Bash hooks (`*.sh`) won't run natively - they need Git Bash, WSL, or a PowerShell rewrite
 - `~/.claude/.env` is a regular file. PowerShell env loading differs; the user will need to source it manually or via a profile script
 
-Strongly recommend WSL2. The Pack assumes Unix conventions throughout — fighting Windows native is more work than installing WSL.
+Strongly recommend WSL2. The Pack assumes Unix conventions throughout - fighting Windows native is more work than installing WSL.
