@@ -139,7 +139,7 @@ Report: does `~/.claude/` exist, is there a `settings.json`, is there a `.env`. 
 
 ## Step 2 - Workspace location interview (BEFORE touching ~/.claude/)
 
-This is the most important preference question. The Pack ships with four workspace directories - `_CONTEXT`, `_CLIENTS`, `_BUSINESS`, `_APPS` - and you must NOT assume where they go. Different users want them in different places.
+This is the most important preference question. The Pack ships with four workspace directories - `_CONTEXT`, `_CLIENTS`, `_BUSINESS`, `_APPS` - and you must NOT assume where they go. Different users want them in different places. **Frame it as a proposal, not a fixed layout** - present the structure as the pack's suggestion and explicitly invite the user to shape it: "tohle je navrhovaná struktura, pojďme ji probrat a nastavit, jak to chceš mít ty."
 
 Ask the user:
 
@@ -226,12 +226,7 @@ Contents going in:
 - `templates/` - five scaffolding templates: klient, dev, business, app, general
 - `agents/` - empty placeholder + README
 
-**Critical:** if `~/.claude/settings.json` already existed in the backup, ask the user whether to:
-1. Replace (default - backup preserved the old one)
-2. Skip the settings.json copy (keep what they had)
-3. Merge manually - they'll need to open both files and decide
-
-The install does not auto-merge JSON.
+**Critical - existing setup: analyze, recommend, don't overwrite.** If `~/.claude/settings.json` (or a `rules/`/`hooks/` directory) already existed in the backup, do NOT blindly replace it. First read the user's existing config - permissions, hooks, env, rules - and compare it against what this pack ships. Then present a tailored, area-by-area recommendation: what of theirs is worth keeping, what the pack adds that's worth adopting, where the two overlap or conflict, and a suggested result tuned to how this user actually works (ask briefly if it's not obvious). The user decides per area; then write the agreed result. Replace wholesale only if there is nothing meaningful there or they ask for it. The backup protects the original either way - the install never auto-merges JSON, so the merged result is written explicitly.
 
 Execute the copy:
 
