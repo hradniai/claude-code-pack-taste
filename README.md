@@ -6,6 +6,10 @@ Forked and adapted from [Gillellbor/claude-starter-pack](https://github.com/Gill
 
 > **Audience:** the 10–15 person ambassador / power-user layer in an agency. Smart enough to install dependencies and read errors. Not enterprise IT.
 
+## Pro úplné začátečníky (česky)
+
+Pokud je tvoje zkušenost s AI claude.ai a nic víc - začni krátkým [**`UZIVATELSKY-MANUAL.md`**](UZIVATELSKY-MANUAL.md). Přečteš za půl minuty, dozvíš se, co Pack dělá a proč.
+
 ## What you get
 
 ### Kernel (`~/.claude/`)
