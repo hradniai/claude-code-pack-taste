@@ -410,7 +410,7 @@ After this step, Claude can still modify settings.json - but each modification r
 Tell the user:
 
 > Hotovo. Doporučuju:
-> - Nainstalovat **[Warp](https://www.warp.dev/)** jako terminál - modernější a přehlednější příkazová řádka (bloky, inline editace, AI vyhledávání příkazů). Claude Code v něm běží úplně stejně.
+> - Nainstalovat **[Warp](https://www.warp.dev/)** jako terminál - přehlednější a přívětivější příkazová řádka. Výhody: file explorer hned vedle terminálu, normální zadávání textu (píšeš jako v editoru, bez terminálových výstředností), přehlednější organizace oken a snazší navigace ve složkách. Claude Code v něm běží úplně stejně. Ve free verzi v úvodním nastavení **vypni vlastní AI Warpu** - když používáš Claude Code, AI od Warpu nepotřebuješ.
 > - Přečíst `docs/safety-model.md` - co všechno se blokuje a proč.
 > - Přečíst `docs/customization.md` - jak Pack rozšiřovat.
 > - Přečíst `docs/prompting-claude.md` - tipy na práci s Claude.
