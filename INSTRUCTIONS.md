@@ -410,11 +410,14 @@ After this step, Claude can still modify settings.json - but each modification r
 Tell the user:
 
 > Hotovo. Doporučuju:
+> - Nainstalovat **[Warp](https://www.warp.dev/)** jako terminál - modernější a přehlednější příkazová řádka (bloky, inline editace, AI vyhledávání příkazů). Claude Code v něm běží úplně stejně.
 > - Přečíst `docs/safety-model.md` - co všechno se blokuje a proč.
 > - Přečíst `docs/customization.md` - jak Pack rozšiřovat.
 > - Přečíst `docs/prompting-claude.md` - tipy na práci s Claude.
 >
 > Tento repo můžeš teď smazat - všechno je nainstalováno v `~/.claude/` a tvých workspace adresářích.
+
+The Warp recommendation is written Mac-first (Warp's original ecosystem). Warp also ships a Windows build, so if the user is on Windows, point them at the Windows download and adapt - do not present it as Mac-only.
 
 End the install session. Do not proceed to other tasks unless the user asks.
 
