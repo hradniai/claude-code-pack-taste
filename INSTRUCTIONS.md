@@ -215,7 +215,7 @@ Contents going in:
 - `settings.json` - restrictive baseline; bypass mode locked off
 - `AGENTS.md` + `CLAUDE.md` (symlink)
 - `statusline.sh` - 3-line status bar (model · cost / project · ctx / 5h · 7d rate limits)
-- `rules/` - five rules (documentation, respect-denies, subagents, notes, czech-output)
+- `rules/` - five rules (documentation, respect-denies, subagents, notes, language)
 - `scripts/list-env-keys.sh` - lets Claude see *names* of credential env vars without values
 - `hooks/`:
   - `bash-safety-extended.py` (PreToolUse Bash) - blocks bypass patterns

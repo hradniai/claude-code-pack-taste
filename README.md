@@ -19,7 +19,7 @@ Pokud je tvoje zkušenost s AI claude.ai a nic víc - začni krátkým [**`UZIVA
 - **Auto-research hook** - detects unmarked notes in `notes.md`, dispatches background research via the Anthropic API, marks each as ✅ (research done) or ⏭️ (skipped).
 - **Time-injection hook** - adds the current local time to Claude's context every prompt.
 - **Statusline** - three-line live status (model · throughput · cost / project · branch · context / 5-hour and 7-day rate-limit usage). Lets you see when you're burning through your team-plan allotment.
-- **Five rules** - documentation standard, respect-denies behavior, subagent usage guide, notes convention, Czech-output style (banned AI calques, native Czech requirements).
+- **Five rules** - documentation standard, respect-denies behavior, subagent usage guide, notes convention, language (which language to use, plus native-Czech style: banned AI calques, typography).
 - **Five skills** - `setup` (project scaffolding), `skill-creator`, `prd-creator`, `dr-prompt`, `client-data-check` (PII scanner for files before they leave the machine).
 - **Helper script** - `list-env-keys.sh` exposes *names* of credential env vars without ever revealing values.
 
@@ -72,7 +72,7 @@ What changed in this fork:
 - **Browser data added to deny** - Safari/Chrome/Chromium/Firefox/Brave/Edge/Arc cookie and history directories are unreadable. Vibe-coded scripts shouldn't quietly mine your session cookies.
 - **`context-bloat-guard.py` hook added** - soft brake on huge file reads.
 - **Bash safety hook extended** - browser data extraction patterns, `python -c` bypass patterns.
-- **`czech-output.md` rule added** - for teams that write Czech, enforces native Czech style and blocks AI calques.
+- **`language.md` rule added** - single authority for which language to use (English for system files, Czech for chat and deliverables) plus native-Czech style that blocks AI calques.
 - **`client-data-check` skill added** - offline PII scanner.
 - **`inbox-processor.sh` hook removed** - per-edit API calls were nudging team-plan usage; teams can re-enable it from the upstream if they want.
 - **`_CLIENTS/taste/` scaffold included** - pre-built example client workspace.
