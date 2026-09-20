@@ -1,0 +1,13 @@
+{
+  "name": "claude-code-pack-taste",
+  "description": "Plugins shipped with the Claude Code Pack - Taste edition.",
+  "owner": { "name": "Simon Hradni" },
+  "plugins": [
+    {
+      "name": "taste-ai-quality-kit",
+      "description": "Prompt engineering, prompt evaluation (sanity / single-judge / jury) and static admission review of external skills. Reads the user-maintained _CONTEXT/llms directory, never a bundled model cheat sheet.",
+      "source": "./plugins/taste-ai-quality-kit",
+      "category": "productivity"
+    }
+  ]
+}

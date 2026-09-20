@@ -19,10 +19,11 @@ This directory holds custom subagent definitions. Files here are auto-discovered
 
 ## Included agents
 
-The pack ships two agents in this directory:
+The kernel ships one agent in this directory:
 
-- **`prompt-engineer`** - author, refine, and validate any prompt, skill, or agent file. Model-aware (verifies current lineup via web search), with a mandatory two-tier eval (sanity + single-judge subagent). Use when writing or improving any system prompt or Claude Code skill.
 - **`research-analyst`** - focused single-topic lookup returning a self-contained verdict inline. Every claim explained, abbreviations defined, key findings linked. For quick research, not deep multi-source investigation.
+
+Prompt engineering, prompt evaluation, and external skill admission live together in the separately installed `taste-ai-quality-kit` plugin. This prevents a global agent from carrying stale model advice or silently bypassing the user-maintained `_CONTEXT/llms` reference.
 
 Built-in subagents (`general-purpose`, `Explore`, `Plan`) cover the most common needs and have known-good MCP / WebSearch behavior.
 

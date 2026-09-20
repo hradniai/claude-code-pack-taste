@@ -40,8 +40,9 @@ The two halves are loosely coupled — you can install just the kernel if you do
 ├── rules/                     ← auto-loaded into every session
 ├── scripts/                   ← user-invokable utilities
 ├── hooks/                     ← harness-invoked, runs on events
-├── agents/                    ← custom subagent definitions (empty by default)
+├── agents/                    ← custom subagent definitions
 ├── skills/                    ← bundled skills (setup, skill-creator, prd-creator, dr-prompt)
+├── plugins/                   ← separately installed workflow bundles
 └── templates/                 ← scaffolding templates for the /setup skill
 ```
 
@@ -49,7 +50,7 @@ The two halves are loosely coupled — you can install just the kernel if you do
 
 ```
 ~/Documents/
-├── _CONTEXT/                  ← user profile, notes, best-practices
+├── _CONTEXT/                  ← user profile, notes, best-practices, mandatory llms/
 ├── _CLIENTS/                  ← per-client engagement folders
 ├── _BUSINESS/                 ← your own business work
 └── _APPS/                     ← tools and apps you build

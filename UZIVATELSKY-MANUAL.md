@@ -30,6 +30,16 @@ Je stavěný pro **ambasadory a power-usery** - lidi, co píšou drobné skripty
 - **Mít přehled o spotřebě.** Statusbar dole ukazuje, kolik z týmového limitu projídáš (5h i 7denní okno), stav kontextu a cenu session.
 - **Hlídat data klientů.** Skill `client-data-check` ti projede soubor a najde v něm citlivé/osobní údaje dřív, než ho někam pošleš.
 
+## AI Quality Kit (volitelný doplněk)
+
+Při instalaci se tě Claude zeptá, jestli chceš i doplněk **Taste AI Quality Kit**. Přidá tři věci:
+
+- **Psaní promptů.** Řekneš „pomoz mi napsat prompt na X" a dostaneš prompt s testovacími příklady a základní kontrolou hygieny (třeba že v něm neleží žádný klíč).
+- **Vyhodnocení promptu.** Řekneš „vyhodnoť mi tenhle prompt" a vybereš, jestli má hodnotit jeden model, nebo porota několika modelů. Výsledek se uloží k projektu do složky `prompt-evals/` a Claude ti ho česky vysvětlí. Do testovacích příkladů nedávej osobní údaje klientů ani klíče, ukládají se totiž i s výsledkem.
+- **Kontrola cizího skillu.** Než si od někoho nainstaluješ skill nebo plugin, řekneš „zkontroluj mi tuhle složku" a dostaneš přehled, co v ní je a co by mohlo být problém. Nic se při tom nespouští.
+
+Jedna věc je na tobě: složka `_CONTEXT/llms/` se třemi soubory o modelech, které používáš. Dokud je nevyplníš, doplněk práci odmítne a řekne ti, co chybí. Je to schválně, aby ti neradil podle zastaralých informací. Vyplnit je můžeš spolu s Claudem, vést si je ale budeš sám.
+
 ## Instalace
 
 Odkaz na tohle repo dej do Claude Code a řekni mu, ať si to načte a postupuje podle `INSTRUCTIONS.md`.

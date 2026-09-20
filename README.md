@@ -36,15 +36,29 @@ Pokud je tvoje zkušenost s AI claude.ai a nic víc - začni krátkým [**`UZIVA
 - **Statusline** - three-line live status (model · throughput · cost / project · branch · context / 5-hour and 7-day rate-limit usage). Lets you see when you're burning through your team-plan allotment.
 - **Six rules** - documentation standard (incl. frontmatter standard pointer), respect-denies behavior (updated three-tier env model), subagent usage guide, notes convention, language (which language to use, plus native-Czech style: banned AI calques, typography), frontmatter standard.
 - **Six skills** - `setup` (project scaffolding, with template-based gitignore/env schema and local git autosave), `skill-creator`, `prd-creator`, `dr-prompt`, `client-data-check` (PII scanner for files before they leave the machine), `idea-file-creator` (capture an idea as a self-contained, leak-free idea file for handoff or later).
-- **Two agents** - `prompt-engineer` (author/refine/validate any prompt or skill, model-aware), `research-analyst` (focused single-topic lookup with sourced verdict inline).
+- **One kernel agent** - `research-analyst` for focused single-topic lookups with a sourced verdict inline.
+- **Taste AI Quality Kit plugin** - optional bundle installed from this repository's plugin source, not copied into `~/.claude/`. It covers prompt engineering, a prompt hygiene check, live prompt evaluation the plugin runs for you, and a read-only admission review of someone else's skill. It reads the `llms/` context you maintain yourself, never a bundled model cheat sheet.
 - **Helper scripts** - `list-env-keys.sh` exposes *names* of credential env vars without ever revealing values; `env-key-classify.py` adds value-state classification (empty/placeholder/filled+kind); `git-autosave.sh` local-only git safety net for any work folder.
 - **Ignore + env templates** - `gitignore`, `claudeignore`, and per-workspace-type `.env.example` schemas (`klient`, `dev`, `app`, `general`) plus `.env.shared` skeleton. The `setup` skill copies these automatically.
 
 ### Workspace (chosen path, default `~/Documents/`)
-- `_CONTEXT/` - personal profile, notes, best-practices.
+- `_CONTEXT/` - personal profile, notes, best-practices, and mandatory user-maintained `llms/` context for agent work.
 - `_CLIENTS/` - per-client engagements, including a pre-built `taste/` scaffold to start with.
 - `_BUSINESS/` - your own work outside any single client (offers, training material, internal projects).
 - `_APPS/` - small tools and apps you build (one example included).
+
+### Taste AI Quality Kit
+
+Prompt engineering, prompt evaluation and external skill admission are one optional plugin. It is installed during the walkthrough from the plugin source this repository declares:
+
+```bash
+claude plugin marketplace add <path to your clone of this repo>
+claude plugin install taste-ai-quality-kit@claude-code-pack-taste
+```
+
+The plugin holds the workflow, the safety checks and the scanner. The model knowledge stays with you, in `_CONTEXT/llms/`: which models you use, how each of them is prompted, what you decided locally, plus your own access keys and any example sets. That split is deliberate - model facts go stale faster than any package, so keeping them yours is the practice this plugin is built around. The plugin never writes, fills or replaces those files.
+
+The pack ships only the empty skeleton, which reports `CONTEXT_NOT_READY` until you fill it in. You can ask Claude Code to help you research and draft it; the files stay yours either way.
 
 You choose where these live during install - no `~/Documents/` lock-in.
 
@@ -95,7 +109,7 @@ What changed in this fork:
 - **`_CLIENTS/taste/` scaffold included** - pre-built example client workspace.
 - **INSTRUCTIONS.md interactive interview rewritten** - explicit workspace-path prompt (no `~/Documents/` assumption), OS-specific dependency setup, conflict checks before any overwrite.
 - **Frontmatter standard added** (`rules/frontmatter-standard.md`) - unified OKF-aligned YAML frontmatter for every markdown artifact, closed type buckets, predefined tag vocabulary.
-- **Two agents added** - `prompt-engineer` and `research-analyst` with full validation and source-citing constraints.
+- **One kernel agent added** - `research-analyst` with source-citing constraints. Prompt engineering moved out of the kernel into the optional `taste-ai-quality-kit` plugin (see above), so no global agent carries stale model advice.
 - **`env-key-classify.py` + `git-autosave.sh` added** - env value-state classifier (names+kind only, never values); local-only git time machine for any work folder.
 - **Ignore + env templates added** - `gitignore`, `claudeignore`, and per-type `.env.example` + `.env.shared` schemas; `setup` skill copies them automatically.
 - **Env model updated** - three-tier model (global `~/.claude/.env` HARD / project `.env*` HARD / `.env.shared` SOFT) replaces the old `.env.local`-as-readable exception. `respect-denies.md`, `setup` skill, `INSTRUCTIONS.md`, `UZIVATELSKY-MANUAL.md`, and `docs/safety-model.md` document this consistently.
