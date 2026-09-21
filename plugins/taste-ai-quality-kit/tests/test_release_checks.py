@@ -31,9 +31,15 @@ class ReleaseChecks(unittest.TestCase):
         self.assertIn("--strict-mcp-config", args)
         self.assertIn("--no-session-persistence", args)
         self.assertEqual(args[args.index("--model") + 1], "claude-haiku-4-5")
-        self.assertEqual(args[-3:], ["Read", "Grep", "Glob"])
+        self.assertEqual(args[args.index("--allowedTools") + 1:], runner.JUDGE_TOOLS)
+        self.assertIn("Bash", runner.JUDGE_TOOLS)
+        self.assertEqual(args[args.index("--permission-mode") + 1], "acceptEdits")
         default_args = runner.claude_code_command("request", Path("/tmp/judge"), "default")
         self.assertNotIn("--model", default_args)
+        env_args = runner.claude_code_command("request", Path("/tmp/judge"), "default", user_settings=True, extra_args=("--settings", "{}"))
+        self.assertNotIn("--setting-sources", env_args)
+        self.assertIn("--strict-mcp-config", env_args)
+        self.assertEqual(env_args[env_args.index("--settings") + 1], "{}")
 
     def test_codex_judge_never_bypasses_sandbox(self) -> None:
         runner = load_runner_module()

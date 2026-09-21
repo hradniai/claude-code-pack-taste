@@ -38,7 +38,13 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/run_live_eval.sh" \
 
 6. For `jury`, repeat `--judge` for every selected model. The run is stored under `<workspace>/prompt-evals/<prompt-slug>/<timestamp>/`; read its `report.md` and relay verdict, score and the judges' findings in plain Czech. The first live run installs the runtime and takes about a minute longer. If a prerequisite is missing (`EVAL_NOT_CONFIGURED` on stderr), explain it in plain Czech and offer to set it up. Do not name Python, SDK, or CLI unless the user explicitly asks for technical detail.
 
-Claude Code and Codex judges are optional agent channels. They run in an isolated temporary workspace and store their transcript with the judge verdict. Claude Code uses the user's own logged-in Claude Code in headless mode with settings, hooks, plugins and MCP servers disabled for that call; it needs no API key. Codex uses its own local login.
+Claude Code and Codex judges are optional agent channels. They execute the prompt under test with real tools (shell, file reads and writes, search) and store their transcript with the verdict. Claude Code uses the user's own logged-in Claude Code; Codex uses its own local login; neither needs an API key.
+
+**Where an agent judge runs is a per-run choice, and the default is a fenced workspace.** The judge sees only a curated workspace: the brief plus the files the user chose, nothing else on the machine. That is what keeps the measurement honest: a judge that can wander into the real project finds guidelines and finished work and then measures the project instead of the prompt. Before an agent-judge run:
+
+- Ask in plain Czech which files the judge should have in front of it (a sample input, a style guide the prompt refers to). Pass each as `--judge-context <path>`. Default: none.
+- If the user explicitly wants the judge inside the real project („spusť to normálně, ať vidí můj projekt"), pass `--isolation environment`, say in one sentence that the judge then works in their workspace with their own settings, and note the choice in the result. Never choose `environment` on your own.
+- Otherwise leave `--isolation auto`. Relay the level the report names per judge (`namespace`, `sandboxed`, `config-only`, `environment`) together with its limit from `${CLAUDE_PLUGIN_ROOT}/references/agent-judge-runtimes.md`; `config-only` and `sandboxed` do not hide the whole disk, and the report must say so.
 
 **REQUIRED BACKGROUND:** When either agent channel is selected, read `${CLAUDE_PLUGIN_ROOT}/references/agent-judge-runtimes.md` before starting the run. It defines the authentication, sandbox, model-identity and transcript limits that must appear in the result.
 

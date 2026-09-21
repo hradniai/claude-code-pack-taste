@@ -2,7 +2,7 @@
 title: "Taste AI Quality Kit"
 summary: "One Claude Code plugin for writing prompts, evaluating them on real examples, and reviewing someone else's skill before it is trusted - backed by LLM context the user maintains outside the plugin."
 status: draft
-version: "1.0.0"
+version: "1.1.0"
 ---
 
 # Taste AI Quality Kit
@@ -54,7 +54,20 @@ Three depths, you pick one:
 | `single-judge` | The prompt runs on a target model you choose; one judge model you choose scores every output. | for the models used |
 | `jury` | The same, with a panel of two or more judges you compose. | for the models used |
 
-Target and judges are picked from your `models.md`. Models reached over the network are written `google/<id>`, `anthropic/<id>` or `openai/<id>`. Two judges run as agents instead: `claude-code/<model or default>` uses your own logged-in Claude Code with your settings, hooks, plugins and connections switched off for that call, and `codex/<model or default>` uses your own Codex login. Both are optional and need no access key.
+Target and judges are picked from your `models.md`. Models reached over the network are written `google/<id>`, `anthropic/<id>` or `openai/<id>`. Two judges run as agents instead: `claude-code/<model or default>` uses your own logged-in Claude Code, and `codex/<model or default>` uses your own Codex login. Both are optional and need no access key. An agent judge does not just read the output: it runs the prompt with real tools (shell, files, search) and reports how an agent behaves under it.
+
+### Where an agent judge runs
+
+By default an agent judge works in a fenced workspace that holds only the brief and the files you chose to give it. It cannot see the rest of your machine, so the run measures the prompt and not the guidelines or finished reports lying around in your project. How strong that fence is depends on the machine, and every report names the level that applied:
+
+| Level | Machine | What it means |
+|---|---|---|
+| `namespace` | Linux and WSL2 with bubblewrap installed | The strongest: for the judge, nothing else on the computer exists. Measured on Linux. |
+| `sandboxed` | Claude Code on macOS | Claude Code's own sandbox for commands plus rules that block the file tools from your home folder and every mounted volume. A block list, not a full fence. Documented, not yet measured on a Mac; `scripts/verify_isolation.py` measures it on yours. |
+| `config-only` | Codex on macOS | Codex starts with a fresh configuration and the fenced workspace, so none of your settings or skills reach it; it can still read files if it goes looking. |
+| `environment` | On request, one run at a time | The judge works inside your real project with your own settings. Say so when you ask for the evaluation; the report records it. |
+
+To give the judge a file or folder on purpose (a sample input, a style guide the prompt refers to), name it when you ask for the run; it is copied into the fenced workspace.
 
 A key is needed only for the models a given run actually uses. Keys live in `<context dir>/.env` (`GOOGLE_API_KEY` or `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`). The plugin reads that file inside its own process and never prints a value.
 

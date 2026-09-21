@@ -10,6 +10,9 @@ model=""
 examples=""
 judges=()
 judge_count=0
+judge_context=()
+judge_context_count=0
+isolation="auto"
 tier=""
 workspace="$PWD"
 while [ "$#" -gt 0 ]; do
@@ -21,10 +24,16 @@ while [ "$#" -gt 0 ]; do
     --tier) tier="${2:?missing tier}"; shift 2 ;;
     --examples) examples="${2:?missing examples path}"; shift 2 ;;
     --judge) judges+=("${2:?missing judge model}"); judge_count=$((judge_count + 1)); shift 2 ;;
+    --judge-context) judge_context+=("${2:?missing judge context path}"); judge_context_count=$((judge_context_count + 1)); shift 2 ;;
+    --isolation) isolation="${2:?missing isolation level}"; shift 2 ;;
     --workspace) workspace="${2:?missing workspace}"; shift 2 ;;
     *) echo "EVAL_NOT_CONFIGURED: unknown argument $1" >&2; exit 2 ;;
   esac
 done
+case "$isolation" in
+  auto|namespace|sandboxed|config-only|environment) ;;
+  *) echo "EVAL_NOT_CONFIGURED: isolation must be auto, namespace, sandboxed, config-only or environment" >&2; exit 10 ;;
+esac
 
 [ -n "$context_dir" ] || { echo "EVAL_NOT_CONFIGURED: evaluation context is not configured" >&2; exit 10; }
 [ -n "$prompt" ] || { echo "EVAL_NOT_CONFIGURED: prompt is required" >&2; exit 10; }
@@ -116,9 +125,15 @@ args=(
   --tier "$tier"
   --model "$model"
   --workspace "$workspace"
+  --isolation "$isolation"
 )
 [ -n "$examples" ] && args+=(--examples "$examples")
 for judge in "${judges[@]}"; do
   args+=(--judge "$judge")
 done
+if [ "$judge_context_count" -gt 0 ]; then
+  for context_path in "${judge_context[@]}"; do
+    args+=(--judge-context "$context_path")
+  done
+fi
 exec "$python_bin" "${args[@]}"

@@ -16,6 +16,9 @@ import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import isolation  # noqa: E402  (sibling module: where an agent judge runs and what it can see)
+
 
 API_PROVIDERS = {"google", "anthropic", "openai"}
 AGENT_JUDGES = {"claude-code", "codex"}
@@ -184,14 +187,20 @@ def parse_claude_code_result(stdout: str) -> str:
     return text
 
 
-def claude_code_command(judge_request: str, workdir: Path, model: str) -> list[str]:
-    args = [
-        "claude", "-p", judge_request, *CLAUDE_CODE_ISOLATION,
-        "--output-format", "json", "--add-dir", str(workdir), "--permission-mode", "default",
-    ]
+JUDGE_TOOLS = ["Bash", "Read", "Write", "Edit", "Grep", "Glob"]
+
+
+def claude_code_command(judge_request: str, workdir: Path, model: str, *, user_settings: bool = False, extra_args: tuple = ()) -> list[str]:
+    """Headless Claude Code as a judge with real tools. The working directory is the judge workspace.
+
+    `user_settings=True` is the `environment` level: the user's own settings, hooks and deny rules stay active
+    because the judge then works inside the user's real workspace.
+    """
+    flags = [flag for flag in CLAUDE_CODE_ISOLATION if flag not in ("--setting-sources", "")] if user_settings else list(CLAUDE_CODE_ISOLATION)
+    args = ["claude", "-p", judge_request, *flags, "--output-format", "json", "--permission-mode", "acceptEdits", *extra_args]
     if model and model != "default":
         args += ["--model", model]
-    return args + ["--allowedTools", "Read", "Grep", "Glob"]
+    return args + ["--allowedTools", *JUDGE_TOOLS]
 
 
 def codex_command(judge_request: str, workdir: Path, output_file: Path, model: str) -> list[str]:
@@ -219,19 +228,30 @@ def build_judge_request(*, intent: str, prompt: str, user_input: str, target_out
     )
 
 
-async def call_agent_judge(*, model_id: str, prompt: str, intent: str, user_input: str, target_output: str) -> dict[str, object]:
+async def call_agent_judge(*, model_id: str, prompt: str, intent: str, user_input: str, target_output: str,
+                           isolation_level: str = "auto", context_paths: list = (), environment_workdir: Path | None = None) -> dict[str, object]:
     provider, model = parse_model_id(model_id)
     if provider not in AGENT_JUDGES:
         raise ValueError("Agent judge must be claude-code or codex")
-    workdir = Path(tempfile.mkdtemp(prefix="taste-prompt-eval-judge-"))
     judge_request = build_judge_request(intent=intent, prompt=prompt, user_input=user_input, target_output=target_output)
     try:
+        launch = isolation.plan_launch(runtime=provider, requested=isolation_level, brief=judge_request,
+                                       context_paths=list(context_paths), environment_workdir=environment_workdir or Path.cwd())
+    except isolation.IsolationError as error:
+        raise EvaluationCallError(f"{provider} judge isolation: {error}") from error
+    workdir = launch.workdir
+    scratch = None
+    evidence = {"runtime": provider, "isolation": launch.level, "isolation_note": launch.note}
+    try:
         if provider == "claude-code":
-            args = claude_code_command(judge_request, workdir, model)
+            args = launch.argv_prefix + claude_code_command(
+                judge_request, workdir, model, user_settings=launch.level == "environment", extra_args=tuple(launch.cli_args))
             # The seat login stays (CLAUDE_CODE_OAUTH_TOKEN is how a headless machine logs in); provider keys do not,
             # so the judge is always billed to the user's Claude Code login, never to an API account.
+            env = judge_environment(keep=("CLAUDE_CODE_OAUTH_TOKEN",))
+            env.update(launch.env_overrides)
             proc = await asyncio.create_subprocess_exec(
-                *args, cwd=str(workdir), env=judge_environment(keep=("CLAUDE_CODE_OAUTH_TOKEN",)),
+                *args, cwd=str(workdir), env=env,
                 stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
             )
             stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=300)
@@ -242,12 +262,19 @@ async def call_agent_judge(*, model_id: str, prompt: str, intent: str, user_inpu
             text = parse_claude_code_result(stdout_text)
             if proc.returncode != 0:
                 raise EvaluationCallError(f"claude-code judge failed (exit {proc.returncode}): {excerpt(stderr_text[-500:] or text)}")
-            return {"text": text, "transcript": text, "runtime": "claude-code"}
+            files = [] if launch.level == "environment" else isolation.describe_workspace(workdir)
+            return {"text": text, "transcript": text, "workspace_files": files, **evidence}
 
-        output_file = workdir / "codex-final.txt"
-        args = codex_command(judge_request, workdir, output_file, model)
+        if launch.level == "environment":  # never drop the final-output file into the user's real workspace
+            scratch = Path(tempfile.mkdtemp(prefix="taste-prompt-eval-judge-"))
+            output_file = scratch / "codex-final.txt"
+        else:
+            output_file = workdir / "codex-final.txt"
+        args = launch.argv_prefix + codex_command(judge_request, workdir, output_file, model)
+        env = judge_environment()
+        env.update(launch.env_overrides)
         proc = await asyncio.create_subprocess_exec(
-            *args, cwd=str(workdir), env=judge_environment(),
+            *args, cwd=str(workdir), env=env,
             stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
         )
         stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=300)
@@ -258,13 +285,17 @@ async def call_agent_judge(*, model_id: str, prompt: str, intent: str, user_inpu
         text, transcript = _extract_codex_final(stdout.decode(errors="replace"), output_file)
         if not text:
             raise EvaluationCallError("Codex judge returned no verdict")
-        return {"text": text, "transcript": transcript, "runtime": "codex"}
+        files = [] if launch.level == "environment" else isolation.describe_workspace(workdir)
+        return {"text": text, "transcript": transcript, "workspace_files": files, **evidence}
     except asyncio.TimeoutError as error:
         raise EvaluationCallError(f"{provider} judge timed out") from error
     except FileNotFoundError as error:
         raise EvaluationCallError(f"{provider} is not installed or available") from error
     finally:
-        shutil.rmtree(workdir, ignore_errors=True)
+        for path in launch.cleanup_paths:
+            shutil.rmtree(path, ignore_errors=True)
+        if scratch is not None:
+            shutil.rmtree(scratch, ignore_errors=True)
 
 
 def parse_verdict(text: str) -> dict[str, object]:
@@ -289,7 +320,8 @@ def aggregate_verdicts(verdicts: list[dict[str, object]]) -> dict[str, object]:
     return {"verdict": verdict, "score": round(sum(scores) / len(scores), 2) if scores else None}
 
 
-async def evaluate(*, prompt: str, intent: str, target_model: str, judge_models: list[str], examples: list[str]) -> dict[str, object]:
+async def evaluate(*, prompt: str, intent: str, target_model: str, judge_models: list[str], examples: list[str],
+                   isolation_level: str = "auto", context_paths: list = (), environment_workdir: Path | None = None) -> dict[str, object]:
     judge_instruction = """<purpose>Evaluate whether an output satisfies the declared intent.</purpose>
 <constraints>
 Return only JSON with keys verdict, score, findings. verdict is PASS, REVISE, or INCONCLUSIVE. score is an integer from 1 to 5. findings is an array of concise evidence-based strings.
@@ -308,7 +340,8 @@ Do not reward style over correctness. Treat missing, unverifiable, or fabricated
         judge_outputs = await asyncio.gather(*(
             call_provider(model_id=judge, system=judge_instruction, user=judge_message)
             if parse_model_id(judge)[0] in API_PROVIDERS
-            else call_agent_judge(model_id=judge, prompt=prompt, intent=intent, user_input=example, target_output=output)
+            else call_agent_judge(model_id=judge, prompt=prompt, intent=intent, user_input=example, target_output=output,
+                                  isolation_level=isolation_level, context_paths=context_paths, environment_workdir=environment_workdir)
             for judge in judge_models
         ), return_exceptions=True)
         verdicts = []
@@ -317,7 +350,14 @@ Do not reward style over correctness. Treat missing, unverifiable, or fabricated
                 verdicts.append({"model": judge, "verdict": "CALL_FAILED", "reason": str(judge_output)})
             else:
                 if isinstance(judge_output, dict):
-                    verdicts.append({"model": judge, "transcript": judge_output.get("transcript", ""), **parse_verdict(str(judge_output.get("text", "")))})
+                    verdicts.append({
+                        "model": judge,
+                        "transcript": judge_output.get("transcript", ""),
+                        "isolation": judge_output.get("isolation"),
+                        "isolation_note": judge_output.get("isolation_note"),
+                        "workspace_files": judge_output.get("workspace_files", []),
+                        **parse_verdict(str(judge_output.get("text", ""))),
+                    })
                 else:
                     verdicts.append({"model": judge, **parse_verdict(judge_output)})
         cases.append({"input": example, "output": output, "judges": verdicts, "aggregate": aggregate_verdicts(verdicts)})
@@ -367,7 +407,8 @@ def report_markdown(*, slug: str, tier: str, digest: str, report: dict[str, obje
         if case.get("target_error"):
             lines.append(f"- target error: {excerpt(case['target_error'])}")
         for judge in case.get("judges", []):
-            lines.append(f"- {judge['model']}: {judge.get('verdict')} (score {judge.get('score')})")
+            isolation_tag = f" [isolation: {judge['isolation']}]" if judge.get("isolation") else ""
+            lines.append(f"- {judge['model']}: {judge.get('verdict')} (score {judge.get('score')}){isolation_tag}")
             findings = judge.get("findings")
             if isinstance(findings, str):
                 findings = [findings]
@@ -397,9 +438,11 @@ def write_workspace_run(*, workspace: Path, prompt_path: Path, prompt: str, inte
         (outputs / f"{index:02d}.md").write_text(str(case["output"]), encoding="utf-8")
     (run_dir / "verdicts.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     (run_dir / "report.md").write_text(report_markdown(slug=slug, tier=tier, digest=digest, report=report), encoding="utf-8")
+    isolation_levels = sorted({str(judge["isolation"]) for case in report["cases"] for judge in case.get("judges", []) if judge.get("isolation")})
     history_entry = {
         "timestamp": timestamp,
         "tier": tier,
+        "isolation": isolation_levels,
         "prompt_sha256": digest,
         "target_model": report["target_model"],
         "judge_models": report["judge_models"],
@@ -421,6 +464,10 @@ def main() -> int:
     parser.add_argument("--judge", action="append", default=[])
     parser.add_argument("--examples")
     parser.add_argument("--workspace", required=True)
+    parser.add_argument("--isolation", default="auto", choices=isolation.LEVELS,
+                        help="where agent judges run: auto picks the strongest level this machine offers; environment runs them in the workspace")
+    parser.add_argument("--judge-context", action="append", default=[],
+                        help="file or directory copied into the isolated judge workspace (repeatable); the curated context the judge may see")
     args = parser.parse_args()
 
     parse_model_id(args.model)
@@ -430,7 +477,10 @@ def main() -> int:
     prompt_path = Path(args.prompt)
     prompt = prompt_path.read_text(encoding="utf-8")
     examples = read_examples(Path(args.examples) if args.examples else None)
-    report = asyncio.run(evaluate(prompt=prompt, intent=args.intent, target_model=args.model, judge_models=args.judge, examples=examples))
+    report = asyncio.run(evaluate(
+        prompt=prompt, intent=args.intent, target_model=args.model, judge_models=args.judge, examples=examples,
+        isolation_level=args.isolation, context_paths=args.judge_context, environment_workdir=Path(args.workspace),
+    ))
     run_dir = write_workspace_run(workspace=Path(args.workspace), prompt_path=prompt_path, prompt=prompt, intent=args.intent, tier=args.tier, examples=examples, report=report)
     print(json.dumps({"status": "COMPLETE", "report": str(run_dir / "report.md"), "overall_verdict": report["overall_verdict"], "overall_score": report["overall_score"]}))
     return 0

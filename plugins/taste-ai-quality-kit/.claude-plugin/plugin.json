@@ -1,7 +1,7 @@
 {
   "name": "taste-ai-quality-kit",
-  "version": "1.0.0",
-  "description": "Taste workflow for creating prompts, checking their basic hygiene, evaluating them on real models (single judge or a jury), and admitting external skills without executing them.",
+  "version": "1.1.0",
+  "description": "Taste workflow for creating prompts, checking their basic hygiene, evaluating them on real models (single judge or a jury, with fenced Claude Code and Codex agent judges), and admitting external skills without executing them.",
   "author": {
     "name": "Simon Hradni"
   },

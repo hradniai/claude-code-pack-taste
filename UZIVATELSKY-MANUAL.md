@@ -35,7 +35,7 @@ Je stavěný pro **ambasadory a power-usery** - lidi, co píšou drobné skripty
 Při instalaci se tě Claude zeptá, jestli chceš i doplněk **Taste AI Quality Kit**. Přidá tři věci:
 
 - **Psaní promptů.** Řekneš „pomoz mi napsat prompt na X" a dostaneš prompt s testovacími příklady a základní kontrolou hygieny (třeba že v něm neleží žádný klíč).
-- **Vyhodnocení promptu.** Řekneš „vyhodnoť mi tenhle prompt" a vybereš, jestli má hodnotit jeden model, nebo porota několika modelů. Výsledek se uloží k projektu do složky `prompt-evals/` a Claude ti ho česky vysvětlí. Do testovacích příkladů nedávej osobní údaje klientů ani klíče, ukládají se totiž i s výsledkem.
+- **Vyhodnocení promptu.** Řekneš „vyhodnoť mi tenhle prompt" a vybereš, jestli má hodnotit jeden model, nebo porota několika modelů. Výsledek se uloží k projektu do složky `prompt-evals/` a Claude ti ho česky vysvětlí. Do testovacích příkladů nedávej osobní údaje klientů ani klíče, ukládají se totiž i s výsledkem. Když do poroty vezmeš Claude Code nebo Codex, prompt si opravdu spustí s nástroji, ale v oddělené kleci: vidí jen zadání a soubory, které mu k tomu dáš. Když má pracovat přímo v tvém projektu, řekni to.
 - **Kontrola cizího skillu.** Než si od někoho nainstaluješ skill nebo plugin, řekneš „zkontroluj mi tuhle složku" a dostaneš přehled, co v ní je a co by mohlo být problém. Nic se při tom nespouští.
 
 Jedna věc je na tobě: složka `_CONTEXT/llms/` se třemi soubory o modelech, které používáš. Dokud je nevyplníš, doplněk práci odmítne a řekne ti, co chybí. Je to schválně, aby ti neradil podle zastaralých informací. Vyplnit je můžeš spolu s Claudem, vést si je ale budeš sám.
