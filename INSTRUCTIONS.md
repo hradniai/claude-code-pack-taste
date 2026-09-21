@@ -408,7 +408,7 @@ Then:
 >
 > Klíč potřebuješ jen pro ty modely, které v daném běhu opravdu použiješ. První ostrý běh si plugin sám připraví, co potřebuje - trvá to asi minutu a nic přitom nespouštíš ručně.
 
-On Linux or WSL2 only: the strongest fence for Claude Code and Codex judges needs the `bubblewrap` package (`sudo apt install bubblewrap` on Debian and Ubuntu). Tell the user in one Czech sentence and let them run it themselves; without it the plugin falls back to a weaker level and says so in every report. On macOS nothing is installed.
+On Linux or WSL2 only: Claude Code and Codex as evaluation judges need the `bubblewrap` package (`sudo apt install bubblewrap` on Debian and Ubuntu). Tell the user in one Czech sentence and let them run it themselves; without it those two judges refuse to run and the report says why (the model judges over the network keep working). On macOS nothing is installed.
 
 ---
 

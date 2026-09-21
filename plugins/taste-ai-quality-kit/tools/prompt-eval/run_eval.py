@@ -31,7 +31,7 @@ CLAUDE_CODE_ISOLATION = ["--setting-sources", "", "--strict-mcp-config", "--no-s
 
 # Agent judges read attacker-controllable text (the prompt under test, inputs, outputs) and can run commands, so
 # they never inherit provider keys or any other secret-looking variable from the evaluator's environment.
-SECRET_ENV_NAME = re.compile(r"API_KEY|TOKEN|SECRET|PASSWORD|CREDENTIAL", re.IGNORECASE)
+SECRET_ENV_NAME = re.compile(r"API_KEY|TOKEN|SECRET|PASSWORD|CREDENTIAL|SSH_AUTH_SOCK|GPG_AGENT_INFO", re.IGNORECASE)
 
 
 def judge_environment(keep: tuple[str, ...] = ()) -> dict[str, str]:

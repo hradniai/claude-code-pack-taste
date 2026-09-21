@@ -24,19 +24,100 @@ def load_isolation():
 
 
 class IsolationTests(unittest.TestCase):
-    def test_auto_picks_namespace_when_bubblewrap_exists_else_per_runtime_fallback(self) -> None:
+    def test_auto_picks_namespace_on_linux_and_per_runtime_levels_on_macos(self) -> None:
         iso = load_isolation()
-        with mock.patch.object(iso, "bwrap_available", return_value=True):
+        with mock.patch.object(iso.platform, "system", return_value="Linux"), mock.patch.object(iso, "bwrap_available", return_value=True):
             self.assertEqual(iso.resolve_level("auto", "claude-code"), "namespace")
             self.assertEqual(iso.resolve_level("auto", "codex"), "namespace")
-        with mock.patch.object(iso, "bwrap_available", return_value=False):
-            self.assertEqual(iso.resolve_level("auto", "claude-code"), "sandboxed")
-            self.assertEqual(iso.resolve_level("auto", "codex"), "config-only")
-            self.assertEqual(iso.resolve_level("environment", "codex"), "environment")
+        with mock.patch.object(iso.platform, "system", return_value="Linux"), mock.patch.object(iso, "bwrap_available", return_value=False):
+            with self.assertRaisesRegex(iso.IsolationError, "bubblewrap"):
+                iso.resolve_level("auto", "claude-code")  # Claude Code's own Linux sandbox is bubblewrap too: no weaker level
             with self.assertRaises(iso.IsolationError):
                 iso.resolve_level("namespace", "codex")
+            self.assertEqual(iso.resolve_level("environment", "codex"), "environment")
+        with mock.patch.object(iso.platform, "system", return_value="Darwin"), mock.patch.object(iso, "bwrap_available", return_value=False):
+            self.assertEqual(iso.resolve_level("auto", "claude-code"), "sandboxed")
+            self.assertEqual(iso.resolve_level("auto", "codex"), "config-only")
+        with mock.patch.object(iso.platform, "system", return_value="Windows"), mock.patch.object(iso, "bwrap_available", return_value=False):
+            with self.assertRaisesRegex(iso.IsolationError, "WSL2"):
+                iso.resolve_level("auto", "codex")
         with self.assertRaises(iso.IsolationError):
             iso.resolve_level("bogus", "codex")
+
+    def test_a_level_built_for_the_other_runtime_is_refused_not_recorded(self) -> None:
+        iso = load_isolation()
+        with mock.patch.object(iso.platform, "system", return_value="Darwin"), mock.patch.object(iso, "bwrap_available", return_value=False):
+            with self.assertRaisesRegex(iso.IsolationError, "config-only"):
+                iso.resolve_level("sandboxed", "codex")
+            with self.assertRaisesRegex(iso.IsolationError, "sandboxed"):
+                iso.resolve_level("config-only", "claude-code")
+
+    def test_namespace_unshares_pid_and_ipc_but_not_the_network(self) -> None:
+        iso = load_isolation()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            home_stage = Path(temp_dir) / "home"
+            home_stage.mkdir()
+            work = Path(temp_dir) / "work"
+            work.mkdir()
+            argv, _ = iso.namespace_argv(runtime="codex", work=work, home_stage=home_stage, cli_paths=[])
+        for flag in ("--unshare-pid", "--unshare-ipc", "--new-session"):
+            self.assertIn(flag, argv)
+            self.assertLess(argv.index(flag), argv.index("--proc"))
+        self.assertNotIn("--unshare-net", argv)
+        self.assertNotIn("--unshare-all", argv)
+
+    def test_state_file_copy_drops_mcp_servers_projects_and_secret_like_keys(self) -> None:
+        iso = load_isolation()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            state = Path(temp_dir) / ".claude.json"
+            state.write_text(json.dumps({
+                "hasCompletedOnboarding": True,
+                "oauthAccount": {"emailAddress": "user@example.com"},
+                "mcpServers": {"db": {"env": {"DB_PASSWORD": "x"}}},
+                "projects": {"/Users/me/client-a": {}},
+                "someApiToken": "abc",
+            }), encoding="utf-8")
+            kept = json.loads(iso.stripped_state_file(state))
+        self.assertTrue(kept["hasCompletedOnboarding"])
+        self.assertIn("oauthAccount", kept)
+        for name in ("mcpServers", "projects", "someApiToken"):
+            self.assertNotIn(name, kept)
+        self.assertEqual(iso.stripped_state_file(Path(temp_dir) / "missing.json"), "{}")
+
+    def test_non_namespace_levels_keep_the_workspace_outside_every_denied_root(self) -> None:
+        iso = load_isolation()
+        with mock.patch.object(iso.platform, "system", return_value="Darwin"), mock.patch.object(iso, "bwrap_available", return_value=False):
+            launch = iso.plan_launch(runtime="claude-code", requested="auto", brief="b", context_paths=[], environment_workdir=Path("/tmp"))
+        try:
+            self.assertEqual(launch.level, "sandboxed")
+            work = launch.workdir.resolve()
+            self.assertTrue(str(work).startswith(str(Path(tempfile.gettempdir()).resolve())))
+            self.assertNotIn(str(Path.home()), str(work))
+            self.assertTrue((work / "brief.md").exists())
+        finally:
+            for path in launch.cleanup_paths:
+                import shutil
+                shutil.rmtree(path, ignore_errors=True)
+
+    def test_cli_bind_paths_cover_symlink_dir_and_npm_package_prefix(self) -> None:
+        iso = load_isolation()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            prefix = Path(temp_dir) / "npm-global"
+            package = prefix / "lib" / "node_modules" / "@vendor" / "cli" / "bin"
+            package.mkdir(parents=True)
+            real = package / "cli.js"
+            real.write_text("#!/usr/bin/env node\n", encoding="utf-8")
+            real.chmod(0o755)
+            bin_dir = prefix / "bin"
+            bin_dir.mkdir()
+            (bin_dir / "fakecli").symlink_to(real)
+            with mock.patch.object(iso.shutil, "which", side_effect=lambda name: str(bin_dir / "fakecli") if name == "fakecli" else None):
+                paths = iso.cli_bind_paths("fakecli")
+            self.assertIn(str(bin_dir), paths)
+            self.assertIn(str(prefix / "lib"), paths)  # the parent of node_modules, so the package keeps its dependency tree
+            with mock.patch.object(iso.shutil, "which", return_value=None):
+                with self.assertRaises(iso.IsolationError):
+                    iso.cli_bind_paths("missing-cli")
 
     def test_namespace_argv_orders_every_tmpfs_before_every_bind_and_binds_the_workspace(self) -> None:
         iso = load_isolation()

@@ -34,19 +34,32 @@ import platform
 import secrets
 import shutil
 import sys
+import tempfile
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 
 LEVELS = ("auto", "namespace", "sandboxed", "config-only", "environment")
+# Which runtime each non-namespace level is built for. Asking for the other one fails closed rather than
+# recording a level that did not apply.
+LEVEL_RUNTIMES = {"sandboxed": "claude-code", "config-only": "codex"}
 SYSTEM_READONLY = ("/usr", "/bin", "/sbin", "/lib", "/lib64", "/etc")
 TMPFS_PATHS = ("/tmp", "/run", "/home", "/root")
+# The judge shares the host's network (its own model calls need it) but nothing else: no host process table,
+# so it cannot signal the user's processes, and no host IPC.
+UNSHARE_FLAGS = ("--unshare-pid", "--unshare-ipc", "--unshare-uts", "--unshare-cgroup", "--new-session")
 MASKED_POLICY_DIRS = ("/etc/claude-code", "/etc/codex")
 # Data roots the file tools may not read in `sandboxed` mode. The judge workspace lives under the system temp
-# directory, which is on none of these. `//` is Claude Code's absolute-path prefix in permission rules.
-DENY_ROOTS = ("~/**", "//Users/**", "//home/**", "//root/**", "//srv/**", "//mnt/**", "//media/**",
+# directory (`/var/folders/...` on macOS, `/tmp` on Linux), which is on none of these. `//` is Claude Code's
+# absolute-path prefix in permission rules. The dot-directories are listed on their own in case `~/**` is ever
+# read as excluding hidden paths: they are where the credentials live.
+DENY_ROOTS = ("~/**", "~/.ssh/**", "~/.aws/**", "~/.gnupg/**", "~/.config/**", "~/.claude/**", "~/.codex/**",
+              "~/.env", "~/.env.*", "//Users/**", "//home/**", "//root/**", "//srv/**", "//mnt/**", "//media/**",
               "//Volumes/**", "//opt/**")
 FILE_TOOLS = ("Read", "Edit", "Write", "Grep", "Glob")
+# Keys of ~/.claude.json that never travel into the judge's disposable copy: MCP definitions carry env blocks
+# with keys, the project list is the user's whole map of their work.
+STATE_FILE_DROP = ("mcpServers", "projects", "customApiKeyResponses", "cachedChangelog", "memoryUsage")
 
 
 class IsolationError(RuntimeError):
@@ -77,23 +90,39 @@ def bwrap_available() -> bool:
 
 
 def resolve_level(requested: str, runtime: str) -> str:
-    """The level a run can actually deliver on this machine for this runtime."""
+    """The level a run can actually deliver on this machine for this runtime, or an error naming why not."""
     if requested not in LEVELS:
         raise IsolationError(f"unknown isolation level {requested!r}; use one of {', '.join(LEVELS)}")
     if requested == "environment":
         return "environment"
-    if requested == "namespace" and not bwrap_available():
-        raise IsolationError("namespace isolation needs bubblewrap on Linux or WSL2 (bwrap not found)")
+    owner = LEVEL_RUNTIMES.get(requested)
+    if owner and owner != runtime:
+        valid = next(level for level, rt in LEVEL_RUNTIMES.items() if rt == runtime)
+        raise IsolationError(f"{requested} is a {owner} level; for {runtime} use {valid}, namespace or environment")
+    system = platform.system()
+    if requested == "namespace" or (requested == "auto" and system == "Linux"):
+        if not bwrap_available():
+            # Claude Code's own Linux sandbox is bubblewrap too, so no weaker Linux level exists: fail closed.
+            raise IsolationError("agent judges on Linux and WSL2 need bubblewrap (install the bwrap package), "
+                                 "or run with --isolation environment on purpose")
+        return "namespace"
     if requested != "auto":
         return requested
-    if bwrap_available():
-        return "namespace"
-    return "sandboxed" if runtime == "claude-code" else "config-only"
+    if system == "Darwin":
+        return "sandboxed" if runtime == "claude-code" else "config-only"
+    raise IsolationError(f"agent judges are not supported on {system}; on Windows run Claude Code inside WSL2")
 
 
-def new_judge_root(label: str) -> Path:
+def new_judge_root(label: str, *, under_temp: bool) -> Path:
+    """A fresh per-judge directory with `work/` and `home/`.
+
+    The namespace level keeps it under ~/.cache (bound explicitly into the namespace; Codex refuses a home under
+    /tmp). The other levels put it under the system temp directory, which is outside every root the sandboxed
+    deny rules cover, so the judge can always read and write its own workspace.
+    """
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    root = cache_root() / f"{stamp}-{label}-{secrets.token_hex(3)}"
+    base = Path(tempfile.gettempdir()) / "taste-ai-quality-kit-judge" if under_temp else cache_root()
+    root = base / f"{stamp}-{label}-{secrets.token_hex(3)}"
     (root / "work").mkdir(parents=True)
     (root / "home").mkdir()
     return root
@@ -140,6 +169,25 @@ def _covered(path: str, roots) -> bool:
     return any(p == Path(r) or Path(r) in p.parents for r in roots)
 
 
+def stripped_state_file(state_file: Path) -> str:
+    """~/.claude.json without the parts that describe the user's world or carry secrets.
+
+    MCP server definitions routinely hold API keys in their env blocks, the project list maps the user's work, and
+    anything named like a token or key has no business in a judge's home. What remains is the onboarding and
+    account state Claude Code needs to start headless.
+    """
+    try:
+        state = json.loads(state_file.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return "{}"
+    if not isinstance(state, dict):
+        return "{}"
+    secret_like = ("token", "key", "secret", "password", "credential")
+    kept = {name: value for name, value in state.items()
+            if name not in STATE_FILE_DROP and not any(marker in name.lower() for marker in secret_like)}
+    return json.dumps(kept)
+
+
 def namespace_argv(*, runtime: str, work: Path, home_stage: Path, cli_paths: list) -> tuple:
     """bwrap prefix plus the environment overrides that make the login material visible inside it."""
     home = home_dir()
@@ -168,9 +216,9 @@ def namespace_argv(*, runtime: str, work: Path, home_stage: Path, cli_paths: lis
         argv += ["--dir", str(config_dir)]
         if credentials.exists():
             argv += ["--ro-bind", str(credentials), str(credentials)]
-        if state_file.exists():  # Claude Code updates this file, so the judge gets a disposable copy
+        if state_file.exists():  # Claude Code updates this file, so the judge gets a disposable, stripped copy
             staged = home_stage / "claude-state.json"
-            shutil.copy2(state_file, staged)
+            staged.write_text(stripped_state_file(state_file), encoding="utf-8")
             argv += ["--bind", str(staged), str(state_file)]
         if os.environ.get("CLAUDE_CONFIG_DIR"):
             env["CLAUDE_CONFIG_DIR"] = str(config_dir)
@@ -183,7 +231,7 @@ def namespace_argv(*, runtime: str, work: Path, home_stage: Path, cli_paths: lis
             argv += ["--ro-bind", str(auth), str(codex_home / "auth.json")]
         env["CODEX_HOME"] = str(codex_home)
     argv += ["--bind", str(work), str(work)]
-    argv += ["--proc", "/proc", "--dev", "/dev"]
+    argv += [*UNSHARE_FLAGS, "--proc", "/proc", "--dev", "/dev"]
     for name, value in env.items():
         argv += ["--setenv", name, value]
     argv += ["--chdir", str(work), "--die-with-parent", "--"]
@@ -221,7 +269,7 @@ def plan_launch(*, runtime: str, requested: str, brief: str, context_paths: list
     if level == "environment":
         return JudgeLaunch(level=level, workdir=Path(environment_workdir),
                            note="runs in the user's workspace with the user's own settings; chosen for this run")
-    root = new_judge_root(runtime)
+    root = new_judge_root(runtime, under_temp=level != "namespace")
     work, home_stage = root / "work", root / "home"
     copied = prepare_workspace(work, brief, context_paths)
     context_note = f"context copied in: {', '.join(copied)}" if copied else "no context files, brief only"
