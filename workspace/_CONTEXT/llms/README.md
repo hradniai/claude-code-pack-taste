@@ -20,4 +20,15 @@ Each of the three starts as an empty template marked `status: TODO` in its heade
 
 You do not have to fill them alone. Ask Claude Code to go through one with you - look up what is current, weigh it, write it down. The records stay yours either way; the plugin never writes, fills or replaces them.
 
+## Reference documents
+
+Four maintained reference documents ship next to your records, as a starting point when you fill them in:
+
+- `model-lineup.md` - model catalog and prices across providers;
+- `model-reference-prompting.md` - how each model family is prompted and called;
+- `ai-prompt-guidelines.md` - prompting techniques that hold regardless of model;
+- `codex-cli-reference.md` - reference for the OpenAI Codex CLI.
+
+They are a snapshot with the date of each check written inside, so they age like any model fact. The plugin does not read them; what you take from them goes into your own three files, checked and dated by you.
+
 Keep example sets and evaluation notes in `evals/`. Use safe, representative data there - never real credentials, and no client personal data the examples do not need.
