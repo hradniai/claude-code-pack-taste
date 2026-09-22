@@ -51,7 +51,8 @@ class QualityKitTests(unittest.TestCase):
     def test_sanitizer_blocks_secret_like_literal(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             prompt = Path(temp_dir) / "prompt.md"
-            prompt.write_text("Return JSON. Key: sk-not-a-real-key-012345678901", encoding="utf-8")
+            # Split so the source file itself carries no key-shaped literal for repository secret scanners.
+            prompt.write_text("Return JSON. Key: " + "sk-" + "not-a-real-key-012345678901", encoding="utf-8")
             result = self.run_script("sanitize_prompt.py", "--prompt", str(prompt))
             self.assertEqual(result.returncode, 20)
             payload = json.loads(result.stdout)

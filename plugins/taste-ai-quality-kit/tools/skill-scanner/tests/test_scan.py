@@ -427,7 +427,7 @@ class SkillScannerTests(unittest.TestCase):
             "token=" + "github_" + "pat_" + ("A" * 30),
             f"Authorization: Bearer {sentinel}",
             f"https://user:{sentinel}@example.invalid/path",
-            "-----BEGIN PRIVATE KEY-----\n" + sentinel + "\n-----END PRIVATE KEY-----",
+            "-----BEGIN " + "PRIVATE KEY-----\n" + sentinel + "\n-----END " + "PRIVATE KEY-----",
             f"Authorization: Basic {sentinel}",
             f"Cookie: session={sentinel}; Path=/",
         ]
