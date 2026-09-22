@@ -24,6 +24,7 @@ This directory holds the user's persistent context — information about you, yo
 | `user-profile.md` | Who you are, what you do, how you like to collaborate. Read by Claude on every session. |
 | `notes.md` | Personal brain dump for ideas, impulses, things to explore. Supports the `→ research` auto-trigger. |
 | `best-practices/` | Topic-organized notes on how *you* think about recurring problems. Distinct from generic online best practice. |
+| `llms/` | Mandatory user-maintained model records, prompting rules, decisions, evaluation target, and local provider credentials for agent work. |
 
 ## How Claude uses this
 

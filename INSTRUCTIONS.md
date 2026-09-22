@@ -159,7 +159,7 @@ This is the most important preference question. The Pack ships with four workspa
 Ask the user:
 
 > Pack obsahuje čtyři workspace adresáře:
-> - `_CONTEXT/` - tvůj osobní profil, poznámky, best-practices
+> - `_CONTEXT/` - tvůj osobní profil, poznámky, best-practices a povinný `llms/` kontext pro agentní práci
 > - `_CLIENTS/` - per-klient složky
 > - `_BUSINESS/` - vlastní byznys (projekty, vzdělávání, interní)
 > - `_APPS/` - nástroje a appky, které stavíš
@@ -239,7 +239,7 @@ Contents going in:
   - `inject-current-time.sh` (UserPromptSubmit) - current time in every prompt
 - `skills/setup/`, `skill-creator/`, `prd-creator/`, `dr-prompt/`, `client-data-check/`, `idea-file-creator/`
 - `templates/` - five scaffolding templates: klient, dev, business, app, general
-- `agents/` - `prompt-engineer`, `research-analyst` + README
+- `agents/` - `research-analyst` + README
 
 **Critical - existing setup: analyze, recommend, don't overwrite.** If `~/.claude/settings.json` (or a `rules/`/`hooks/` directory) already existed in the backup, do NOT blindly replace it. First read the user's existing config - permissions, hooks, env, rules - and compare it against what this pack ships. Then present a tailored, area-by-area recommendation: what of theirs is worth keeping, what the pack adds that's worth adopting, where the two overlap or conflict, and a suggested result tuned to how this user actually works (ask briefly if it's not obvious). The user decides per area; then write the agreed result. Replace wholesale only if there is nothing meaningful there or they ask for it. The backup protects the original either way - the install never auto-merges JSON, so the merged result is written explicitly.
 
@@ -339,6 +339,79 @@ done
 
 ---
 
+## Step 7.5 - Install Taste AI Quality Kit
+
+Optional. Three workflows ship as one plugin: help with writing a prompt, evaluation of a prompt on real examples, and a read-only review of someone else's skill before it is trusted. The plugin is installed from the plugin source declared in this repository - it is never copied into the kernel. Run this step after Step 7, because the plugin needs the context directory the workspace copy just created.
+
+Explain the split before installing anything:
+
+> Tahle část je volitelná a přidá ti tři věci: pomoc s psaním promptů, vyhodnocení promptu na reálných příkladech, a kontrolu cizího skillu dřív, než ho pustíš k sobě do počítače.
+>
+> Rozdělené je to takhle: plugin drží postup a bezpečnostní kontroly. Tvoje složka `llms/` drží znalost o modelech - které používáš, jak se který promptuje a co sis u sebe rozhodl. Tu složku si vedeš ty a průběžně ji aktualizuješ, protože znalost o modelech zastarává rychleji než jakýkoli balíček. Plugin do ní nikdy nesahá.
+>
+> Mám to nainstalovat?
+
+Wait for a yes. Then run the three commands from the cloned Pack folder - the same working directory as every other command in this file:
+
+```bash
+claude plugin marketplace add "$(pwd)"
+claude plugin install taste-ai-quality-kit@claude-code-pack-taste
+claude plugin list
+```
+
+The first line registers this repository as a plugin source, the second installs the plugin from it, the third confirms it is there. `claude plugin install ./plugins/taste-ai-quality-kit` does not work - `claude plugin install` installs from a registered source only, never from a bare folder path. Once this branch is merged into the repository's main branch, `claude plugin marketplace add hradniai/claude-code-pack-taste` is expected to work for later updates; that path is not verified yet, so do not use it for this install.
+
+### 7.5a - Point the plugin at the user's context directory
+
+The plugin finds the context directory through `TASTE_LLM_CONTEXT_DIR`. Write it into the `env` block of `~/.claude/settings.json`, which Step 4 installed. Claude Code applies that block to every session, including the scripts a session runs, so nothing in a shell profile needs editing. **Merge, never overwrite** - the file already holds permissions, hooks and the statusline:
+
+```bash
+python3 - "<base-path>/<chosen-context-dir>/llms" <<'EOF'
+import json, sys
+from pathlib import Path
+p = Path.home() / ".claude" / "settings.json"
+s = json.loads(p.read_text()) if p.exists() else {}
+s.setdefault("env", {})["TASTE_LLM_CONTEXT_DIR"] = sys.argv[1]
+p.write_text(json.dumps(s, indent=2))
+print("TASTE_LLM_CONTEXT_DIR ->", sys.argv[1])
+EOF
+```
+
+Verify the one key:
+
+```bash
+python3 -c "import json,pathlib;print(json.load(open(pathlib.Path.home()/'.claude'/'settings.json'))['env']['TASTE_LLM_CONTEXT_DIR'])"
+```
+
+The value applies from the next session, which the Step 9 restart covers.
+
+### 7.5b - Tell the user what is theirs to maintain
+
+> Ve složce `llms/` máš tři soubory: `models.md` (modely, které používáš), `prompting.md` (jak se který z nich promptuje) a `decisions.md` (co sis u sebe rozhodl a proč). Teď jsou prázdné a plugin to pozná - dokud je nevyplníš, práci odmítne a řekne ti, který soubor mu chybí. Je to schválně: radši nic než rada podle půl roku starých informací.
+>
+> Vyplnit je můžeme spolu. Kdykoli mi řekni „pojďme dopsat `models.md`", společně dohledáme aktuální informace a zapíšeme je. Vedeš si je ale ty, plugin ti je nikdy nepřepíše ani nedoplní.
+
+Each of the three files starts with `status: TODO` in its header. That marker is what keeps the plugin closed, so it stays there until the user replaces the placeholder text with real records.
+
+### 7.5c - Keys, only when the user wants a live evaluation
+
+A live evaluation sends the prompt to a model, which needs an access key. The keys live in `llms/.env`, next to the three files. Create it from the template only when the user asks for a live run:
+
+```bash
+cp "<base-path>/<chosen-context-dir>/llms/.env.example" "<base-path>/<chosen-context-dir>/llms/.env"
+chmod 600 "<base-path>/<chosen-context-dir>/llms/.env"
+```
+
+Then:
+
+> Do souboru `.env` si vlož přístupové klíče k modelům, které chceš používat - je to dlouhý kód, kterým se u poskytovatele modelu prokážeš. Otevři si ho v editoru a vlož je tam sám. Do chatu mi je neposílej, já se do jejich hodnot nedívám a v žádném výstupu se neobjeví.
+>
+> Klíč potřebuješ jen pro ty modely, které v daném běhu opravdu použiješ. První ostrý běh si plugin sám připraví, co potřebuje - trvá to asi minutu a nic přitom nespouštíš ručně.
+
+On Linux or WSL2 only: Claude Code and Codex as evaluation judges need the `bubblewrap` package (`sudo apt install bubblewrap` on Debian and Ubuntu). Tell the user in one Czech sentence and let them run it themselves; without it those two judges refuse to run and the report says why (the model judges over the network keep working). On macOS nothing is installed.
+
+---
+
 ## Step 8 - Credential store (`~/.claude/.env`)
 
 The Pack uses `~/.claude/.env` as the central place for API keys. The `notes-research` hook reads `ANTHROPIC_API_KEY` from this file. Other API keys can be added here too - the `list-env-keys.sh` helper lets Claude see their *names* (not values) when needed.
@@ -406,6 +479,7 @@ Tell the user to **restart their Claude Code session** so the new `settings.json
 - Bypass mode is off - `claude --permission-mode bypassPermissions` should refuse
 - The current-time injection works - at session start, Claude should know the actual time
 - Statusline appears at the bottom with model · cost · context · rate-limit info
+- If Step 7.5 ran: `claude plugin list` shows `taste-ai-quality-kit@claude-code-pack-taste` as enabled, and asking Claude „pomoz mi napsat prompt" answers with which `llms/` file still needs filling in (that refusal is the plugin working as designed)
 
 ---
 
@@ -442,7 +516,7 @@ Tell the user:
 > - Přečíst `docs/customization.md` - jak Pack rozšiřovat.
 > - Přečíst `docs/prompting-claude.md` - tipy na práci s Claude.
 >
-> Tento repo můžeš teď smazat - všechno je nainstalováno v `~/.claude/` a tvých workspace adresářích.
+> Tento repo můžeš teď smazat - všechno je nainstalováno v `~/.claude/` a tvých workspace adresářích. Jestli sis nainstaloval i plugin (krok 7.5), běží dál z vlastní kopie; až bude jeho nová verze, naklonuješ si repo znovu a krok 7.5 zopakuješ.
 
 The Warp recommendation is written Mac-first (Warp's original ecosystem). Warp also ships a Windows build, so if the user is on Windows, point them at the Windows download and adapt - do not present it as Mac-only.
 
