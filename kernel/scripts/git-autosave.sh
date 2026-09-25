@@ -12,8 +12,9 @@
 #
 # Hard guarantees:
 #   - NEVER pushes anywhere. Local commits only.
-#   - Only ever operates inside ~/Documents/  (never random dirs). Adjust the
-#     guard below to your own work root if you keep projects elsewhere.
+#   - Only ever operates inside the workspace root (never random dirs):
+#     $PACK_WORKSPACE_ROOT, which the install writes into the env block of
+#     ~/.claude/settings.json, else ~/Documents/.
 #   - Never overwrites an existing .gitignore.
 #   - Skips headless (claude -p) sessions.
 set -uo pipefail
@@ -21,14 +22,50 @@ set -uo pipefail
 MODE="${1:-}"
 CWD="$(pwd)"
 
-# Skip headless (claude -p) subprocess sessions.
-PARENT_CMD=$(ps -o args= -p "$PPID" 2>/dev/null || echo "")
-if [[ "$PARENT_CMD" == *" -p "* ]] || [[ "$PARENT_CMD" == *" -p" ]]; then exit 0; fi
+# Skip headless (claude -p / --print) subprocess sessions. Walk up the process
+# tree to the nearest claude process and read only ITS flags, so a " -p " on some
+# other ancestor's command line (a calling shell running `mkdir -p ...`) does not
+# count. `ps -o args= -p` and `ps -o ppid= -p` work with BSD ps (macOS) and procps.
+is_headless_claude() {
+  local pid="$PPID" args prog i n
+  local -a argv
+  for n in 1 2 3 4 5 6 7 8; do
+    case "$pid" in ''|*[!0-9]*|0|1) return 1 ;; esac
+    args=$(ps -o args= -p "$pid" 2>/dev/null) || return 1
+    case "$args" in *[![:space:]]*) ;; *) return 1 ;; esac
+    read -r -a argv <<< "$args"
+    prog="${argv[0]##*/}"
+    i=1
+    if [ "$prog" != claude ]; then
+      # npm installs show up as `node /path/to/claude ...`
+      case "$prog" in
+        node|nodejs|bun)
+          if [ "${#argv[@]}" -gt 1 ] && [ "${argv[1]##*/}" = claude ]; then i=2; else prog=""; fi ;;
+        *) prog="" ;;
+      esac
+    fi
+    if [ -n "$prog" ]; then
+      while [ "$i" -lt "${#argv[@]}" ]; do
+        case "${argv[$i]}" in -p|--print) return 0 ;; esac
+        i=$((i + 1))
+      done
+      return 1
+    fi
+    pid=$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ')
+  done
+  return 1
+}
+is_headless_claude && exit 0
 
-# Only operate inside the user's work folder. Change this guard if your projects
-# live somewhere other than ~/Documents.
+# Only operate inside the user's workspace root. Set PACK_WORKSPACE_ROOT in the
+# env block of ~/.claude/settings.json if your projects live outside ~/Documents.
+WORK_ROOT="${PACK_WORKSPACE_ROOT:-$HOME/Documents}"
+WORK_ROOT="${WORK_ROOT/#\~/$HOME}"   # settings.json does not expand a leading ~
+WORK_ROOT="${WORK_ROOT%/}"
+# An empty root or "/" would turn the guard below into "any absolute path".
+[ -n "$WORK_ROOT" ] || exit 0
 case "$CWD" in
-  "$HOME"/Documents/*) : ;;
+  "$WORK_ROOT"/*) : ;;
   *) exit 0 ;;
 esac
 

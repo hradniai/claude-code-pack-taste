@@ -6,7 +6,7 @@ metadata:
   status: active
   summary: "Initialize or restructure a project workspace: AGENTS.md + CLAUDE.md symlink, directory scaffolding, ignore/env templates, local git safety net."
   created: 2026-06-16
-  updated: 2026-06-16
+  updated: 2026-09-23
   created_by: Šimon Hradní
   client: taste
   tags: [skill, setup, scaffolding]
@@ -72,7 +72,7 @@ Based on choice, ask the user for template placeholders. Use directory name as d
   (a) migrate: rename CLAUDE.md → AGENTS.md, then create CLAUDE.md symlink
   (b) keep as-is and skip
 - If CLAUDE.md is already a symlink to AGENTS.md, do nothing - already in the right state.
-- For option 5 (clean up): read existing AGENTS.md/CLAUDE.md, scan directory structure, add missing references. Do NOT replace.
+- For option 6 (clean up): read existing AGENTS.md/CLAUDE.md, scan directory structure, add missing references. Do NOT replace.
 
 Note: the template filenames keep `-claude.md` suffix as a legacy internal label. Their content is written to AGENTS.md regardless.
 
@@ -84,12 +84,11 @@ Create only what doesn't already exist. Never overwrite existing files.
 - `.claude/rules/` (empty directory)
 - `notes.md` (skeleton: `# Notes\n\nIdeas, brain dumps, future automations.`)
 - `research/` (empty directory)
-- `.gitignore` and `.claudeignore` from the standard templates (single source of truth - never hand-write them inline):
+- `.gitignore` from the standard template (single source of truth - never hand-write it inline):
   ```bash
-  [ -f .gitignore ]    || cp ~/.claude/templates/gitignore .gitignore
-  [ -f .claudeignore ] || cp ~/.claude/templates/claudeignore .claudeignore
+  [ -f .gitignore ] || cp ~/.claude/templates/gitignore .gitignore
   ```
-  Both are copy-if-missing (never overwrite). The `.claudeignore` is deliberately permissive: it only keeps heavy/derived dirs out of auto-loaded context (token hygiene), it is NOT a security boundary - secret blocking lives in `settings.json` deny + the `bash-safety-extended.py` hook.
+  Copy-if-missing (never overwrite). To keep files away from Claude Code, use `Read(...)` rules in `permissions.deny` of the project's `.claude/settings.json` (Claude Code does not read `.claudeignore`; source: an Anthropic collaborator on https://github.com/anthropics/claude-code/issues/16704).
 - `.env.example` (type-specific schema) + `.env.shared` (soft tier), copy-if-missing. Map the project type to the template: Klient→`klient`, Dev→`dev`, App→`app`, General/Business→`general`.
   ```bash
   [ -f .env.example ] || cp ~/.claude/templates/{type}-env.example .env.example   # {type} = klient|dev|app|general
@@ -115,7 +114,7 @@ Create only what doesn't already exist. Never overwrite existing files.
 - `projects/`
 - Mandatory MD files (create only if they don't exist):
   - `log.md` (skeleton: `# Log\n`)
-  - `docs.md` (skeleton: `# Documents\n\n| Date | Name | Google Drive URL |\n|------|------|------------------|\n`)
+  - `docs.md` (skeleton: `# Docs Index\n\n| Date | Document | Status | Link |\n|------|----------|--------|------|\n`)
   - `meetings.md` (skeleton: `# Meetings\n\n| Date | Topic | Key Points |\n|------|-------|------------|\n`)
   - `worklog.md` (skeleton: `# Worklog\n\n| Timestamp | Type | Project | Description | Files |\n|-----------|------|---------|-------------|-------|\n`)
 
@@ -181,10 +180,21 @@ Give the new workspace a local time machine from day one - local only, no GitHub
 
 ```bash
 ~/.claude/scripts/git-autosave.sh ensure   # git init + standard .gitignore from ~/.claude/templates/gitignore (only if missing)
-git add -A && git commit -q -m "chore: scaffold project"   # first snapshot
 ```
 
-Run from the workspace root. `ensure` is a no-op if git already exists; it never overwrites an existing `.gitignore`, and it does NOT set a git identity (it uses the user's own global `~/.gitconfig`). Commits stay local - pushing to GitHub is always a separate, deliberate action.
+Run it from the project folder. Then take the first snapshot only if a repository now exists:
+
+```bash
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  git add -A && git commit -q -m "chore: scaffold project" && echo "first snapshot committed"
+else
+  echo "no git repository here: local safety net NOT set up"
+fi
+```
+
+`ensure` works only inside the workspace root: `PACK_WORKSPACE_ROOT` from the `env` block of `~/.claude/settings.json` (written during install), else `~/Documents`. Outside it, `ensure` does nothing on purpose. When the check above prints "NOT set up", tell the user in one sentence that this folder has no local safety net, name the root the script uses, and offer the choice: move the project under that root, or change `PACK_WORKSPACE_ROOT` (a settings change they approve, applied from the next session). Never report the safety net as set up when it is not.
+
+`ensure` is a no-op if git already exists; it never overwrites an existing `.gitignore`, and it does NOT set a git identity (it uses the user's own global `~/.gitconfig`). Commits stay local - pushing to GitHub is always a separate, deliberate action.
 
 ## Step 8: Summary
 
@@ -194,4 +204,4 @@ Report what was created:
 - Skill linked (if App type)
 - Next steps suggestion
 
-Do NOT create WORKSTATE.md or MEMORY.md - those are created on-demand by documentation-standard and memory-management rules.
+Do NOT create WORKSTATE.md or MEMORY.md - those are created on demand per `documentation-standard.md`.

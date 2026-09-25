@@ -4,7 +4,7 @@ title: "Your Business"
 status: approved
 summary: "Created: YYYY-MM-DD"
 created: 2026-05-13 12:08
-updated: 2026-05-13 12:08
+updated: 2026-09-23 13:30
 owner: Šimon Hradní
 client: ~
 path: workspace/_BUSINESS/README.md
@@ -23,12 +23,12 @@ Your own business work, internal projects, content, and tooling.
 
 ## Structure
 
-- `projects/` — internal initiatives
-- `education/` — learning materials
-- `research/` — research outputs
-- `docs/` — internal playbooks, processes, templates
-- `scripts/` — your own utilities
+- `projects/` - internal initiatives
+- `education/` - learning materials
+- `research/` - research outputs
+- `docs/` - internal playbooks, processes, templates
+- `scripts/` - your own utilities
 
 ## Status
 
-New scaffolding — populate as you go.
+New scaffolding - populate as you go.

@@ -11,9 +11,8 @@ HARD INVARIANT: the value is read ONLY to classify it. It is NEVER printed, logg
 or returned. Only the NAME and the derived label leave this script. This is the same
 contract as list-env-keys.sh (which lists names only); this companion adds the state.
 
-Heuristic classifier - occasional false positives/negatives are expected and tolerated.
-Signatures sourced from gitleaks / detect-secrets / trufflehog (see
-research/config-files-and-env-handling-research-2026-06-16.md in _AIOS).
+Heuristic classifier - occasional false positives/negatives are expected and tolerated
+(signatures adapted from gitleaks / detect-secrets / trufflehog).
 
 Usage:
   env-key-classify.py <file> [name-filter-regex]

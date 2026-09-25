@@ -2,9 +2,9 @@
 type: core
 title: "Log"
 status: approved
-summary: "Audit trail of automated actions on this client (inbox-processor, notes-research, etc.)."
+summary: "Audit trail of automated actions on this client."
 created: 2026-05-13 12:08
-updated: 2026-05-13 12:08
+updated: 2026-09-23 13:30
 owner: Šimon Hradní
 client: ~
 path: workspace/_CLIENTS/_example-client/log.md
@@ -15,6 +15,6 @@ release: latest
 
 # Log
 
-Audit trail of automated actions on this client (inbox-processor, notes-research, etc.).
+Audit trail of automated actions on this client.
 
 ---

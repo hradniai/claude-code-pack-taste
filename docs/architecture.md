@@ -4,7 +4,7 @@ title: "Architecture"
 status: approved
 summary: "How the starter pack is laid out and why each piece exists."
 created: 2026-05-13 12:08
-updated: 2026-05-13 12:08
+updated: 2026-09-25 10:50
 owner: Šimon Hradní
 client: ~
 path: docs/architecture.md
@@ -28,7 +28,7 @@ How the starter pack is laid out and why each piece exists.
 
 **Workspace** is where your work happens. Per-client, per-business-area, per-app directories. Each top-level directory is opinionated about what belongs there.
 
-The two halves are loosely coupled — you can install just the kernel if you don't want the workspace structure, and vice versa.
+The two halves are loosely coupled - you can install just the kernel if you don't want the workspace structure, and vice versa.
 
 ## Kernel layout
 
@@ -38,10 +38,11 @@ The two halves are loosely coupled — you can install just the kernel if you do
 ├── AGENTS.md                  ← global behavioral baseline
 ├── CLAUDE.md → AGENTS.md      ← symlink so Claude Code reads same content
 ├── rules/                     ← auto-loaded into every session
+├── reference/                 ← on-demand reference docs (frontmatter standard), not auto-loaded
 ├── scripts/                   ← user-invokable utilities
 ├── hooks/                     ← harness-invoked, runs on events
 ├── agents/                    ← custom subagent definitions
-├── skills/                    ← bundled skills (setup, skill-creator, prd-creator, dr-prompt)
+├── skills/                    ← bundled skills (setup, skill-creator, prd-creator, dr-prompt, client-data-check, idea-file-creator)
 ├── plugins/                   ← separately installed workflow bundles
 └── templates/                 ← scaffolding templates for the /setup skill
 ```
@@ -70,70 +71,51 @@ project/
 
 **Why both?**
 - `AGENTS.md` is a cross-tool convention adopted by Cursor, Codex, Gemini CLI, Aider, and ~20 other tools (Linux Foundation Agentic AI Foundation, ratified Dec 2025).
-- `CLAUDE.md` is what Claude Code reads natively (as of mid-2026, AGENTS.md support is requested but not native — see issue #6235).
+- `CLAUDE.md` is what Claude Code reads. Claude Code 2.1.277+ can fall back to AGENTS.md when a folder has no CLAUDE.md, but that fallback needs feature flags, which this pack's `DISABLE_TELEMETRY=1` switches off. In this pack Claude Code reads only CLAUDE.md, so the CLAUDE.md symlink is required, not a convenience.
 - Symlink means one source of truth, two file paths. Edit either, and both reflect.
-- When Claude Code adds native AGENTS.md support, no migration needed — both already work.
 
 ## Hook flow (data path)
 
-When you edit a file, multiple things happen:
+When Claude uses a tool, multiple things happen:
 
 ```
-Claude uses Edit tool
+Claude uses a tool (Bash, Read, Edit, Write, ...)
         ↓
-PreToolUse hooks fire   ← bash-safety-extended.py (Bash only) blocks dangerous patterns
+PreToolUse hooks fire   ← bash-safety-extended.py (Bash and Read) blocks dangerous patterns and env-file reads
+                          context-bloat-guard.py (Read) brakes reads of very large files
         ↓
 Permission engine       ← allow/deny/ask matched against settings.json
         ↓
-Edit executes
-        ↓
-PostToolUse hooks fire  ← notes-research.sh, inbox-processor.sh
-   (async, non-blocking)
+Tool executes
 ```
 
 Hooks invoked by harness do NOT go through the permission engine. They're trusted code shipped with the kernel.
 
-## Auto-processing workflows
+## Notes and inbox
 
-### Notes → research
+### Notes (plain file)
 
-Edit `notes.md` with an entry containing `→ research`:
-```
-## 2026-05-01 14:00
-Investigate how competitor X structures their B2B onboarding. → research
-```
+Every `notes.md` is a plain file for ideas and impulses. No hook watches it and nothing is sent anywhere; when a note deserves research, ask Claude for it.
 
-The `notes-research.sh` hook detects the marker, dispatches an Anthropic API call in the background, writes the result to `research/{topic-slug}-research-{YYYY-MM-DD}.md`, and appends a reference to `notes.md`.
+### Inbox → knowledge base (manual)
 
-Cost: tokens per trigger. Disabled if `ANTHROPIC_API_KEY` not in `~/.claude/.env`.
-
-### Inbox → knowledge base
-
-Drop a `.md` or `.txt` file into any `docs/inbox/` (e.g. inside a client directory):
-- Auto-extraction via Anthropic API → `docs/knowledge-base/drafts/{filename}-extract-{date}.md`
-- Original moved to `docs/inbox/done/`
-- Action logged to `log.md`
-
-User reviews drafts and promotes to `docs/knowledge-base/` if useful. Hook never writes to `knowledge-base/` directly — drafts only.
-
-Cost: tokens per file (truncated to 50k chars input). Disabled without API key.
+`docs/inbox/`: drop files here, then ask Claude to ingest them into `knowledge-base/drafts/` (manual, no hook). You review the drafts and promote what is useful to `docs/knowledge-base/`.
 
 ## What flows where
 
 | Layer | Reads from | Writes to |
 |-------|------------|-----------|
 | Claude Code session | `~/.claude/CLAUDE.md`, `~/.claude/rules/*`, project `AGENTS.md/CLAUDE.md` | Files via Edit/Write tools (with permissions) |
-| `notes-research.sh` hook | `~/.claude/.env`, project `notes.md` | `research/` dir, appends to `notes.md` |
-| `inbox-processor.sh` hook | `~/.claude/.env`, files in `docs/inbox/` | `docs/knowledge-base/drafts/`, `docs/inbox/done/`, `log.md` |
-| `bash-safety-extended.py` hook | hook stdin (tool input) | stderr (block reasons), exit code 0/2 |
+| `bash-safety-extended.py` hook | hook stdin (Bash and Read tool input) | stderr (block reasons), exit code 0/2 |
+| `context-bloat-guard.py` hook | hook stdin (Read tool input), size of the target file | stderr (warning or block reason), exit code 0/2 |
 | `list-env-keys.sh` script | process env, `~/.claude/.env`, `./.env` | stdout (var names only) |
 
 ## Trust boundary
 
 The kernel ships with safety enforced via:
-1. **`settings.json` denies** — destructive bash, sensitive file reads
-2. **`bash-safety-extended.py` hook** — patterns that simple deny rules miss
-3. **`disableBypassPermissionsMode: "disable"`** — bypass mode locked off
-4. **`respect-denies.md` rule** — Claude is instructed to never bypass denies, only inform user
+1. **`settings.json` denies** - destructive bash, sensitive file reads
+2. **`bash-safety-extended.py` hook** - patterns that simple deny rules miss
+3. **`disableBypassPermissionsMode: "disable"`** - bypass mode locked off
+4. **`respect-denies.md` rule** - Claude is instructed to never bypass denies, only inform user
 
 These protect against accidents and Claude being misled into destructive actions. They do **not** protect against a determined adversary on your machine. For locked-down environments, see `safety-model.md`.

@@ -4,7 +4,7 @@ title: "AGENTS"
 status: approved
 summary: "Template for organizing client engagement documentation with knowledge base, meeting records, projects, and research assets."
 created: 2026-05-13 12:08
-updated: 2026-05-13 12:08
+updated: 2026-09-25 10:50
 owner: Šimon Hradní
 client: ~
 path: workspace/_CLIENTS/_example-client/AGENTS.md
@@ -40,21 +40,21 @@ Replace this placeholder with a one-line description of what you're doing for th
 <structure>
 | Path | Purpose |
 |------|---------|
-| `docs/knowledge-base/` | Curated knowledge about the client — Claude reads as source of truth |
-| `docs/knowledge-base/drafts/` | Staging from inbox-processor — review before promoting |
+| `docs/knowledge-base/` | Curated knowledge about the client - Claude reads as source of truth |
+| `docs/knowledge-base/drafts/` | Staging for ingestion candidates - review before promoting |
 | `docs/meetings/` | Meeting transcripts and summaries |
-| `docs/inbox/` | Drop documents here → auto-extracted to knowledge-base/drafts |
+| `docs/inbox/` | Drop files here, then ask Claude to ingest them into `knowledge-base/drafts/` (manual, no hook) |
 | `docs/inbox/done/` | Processed files (originals after extraction) |
 | `docs/research/` | Per-topic research outputs |
 | `projects/` | Concrete client projects (one subfolder each) |
 | `research/` | Generic research outside any specific project |
-| `notes.md` | Brain dump (`→ research` marker triggers auto-research) |
+| `notes.md` | Brain dump, ideas |
 | `log.md` | Audit trail of automated actions |
 </structure>
 
 <constraints>
 - Never expose internal pricing, prompts, or tooling to client-facing outputs
-- `docs/knowledge-base/drafts/` is staging — Claude must NOT read as source of truth, only review
+- `docs/knowledge-base/drafts/` is staging - Claude must NOT read as source of truth, only review
 - `docs/inbox/` is for processing only, not for context
 - Communication with client follows the language set above
 </constraints>

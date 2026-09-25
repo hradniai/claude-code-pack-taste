@@ -4,7 +4,7 @@ title: "AGENTS"
 status: approved
 summary: "Stub example app for transcribing local audio/video files to markdown using LLM API, requires implementation of actual API integration."
 created: 2026-05-13 12:08
-updated: 2026-05-13 12:08
+updated: 2026-09-23 13:30
 owner: Šimon Hradní
 client: ~
 path: workspace/_APPS/_example-app-transcribe/AGENTS.md
@@ -14,7 +14,7 @@ release: latest
 ---
 
 <purpose>
-**Transcribe** — convert local audio/video files into markdown transcripts via an LLM API.
+**Transcribe** - convert local audio/video files into markdown transcripts via an LLM API.
 
 This is a STUB shipped with the starter pack as an example app. The actual API call is not yet implemented. Treat it as a structure skeleton you fill in.
 </purpose>
@@ -22,7 +22,7 @@ This is a STUB shipped with the starter pack as an example app. The actual API c
 <product>
 - **Status:** stub / not implemented
 - **Intended provider:** Google Gemini (multimodal API, supports direct audio input)
-- **Alternative:** OpenAI Whisper (audio-only) or local whisper.cpp
+- **Alternative:** OpenAI transcription API (`gpt-transcribe`, audio-only) or local whisper.cpp
 - **Input:** local audio (.mp3, .wav, .m4a) or video (.mp4, .mov) file
 - **Output:** markdown transcript next to the input file
 </product>
@@ -55,12 +55,12 @@ The stub gives you the directory structure and naming convention. You implement 
 
 <scope>
 ## What this stub IS
-- Directory layout: `src/`, `examples/`, `notes.md`
+- Directory layout: `examples/`, `transcribe.sh`
 - Documentation convention (this AGENTS.md)
 - Placeholder `transcribe.sh` with documented arguments
 
 ## What this stub is NOT
-- A working transcription tool — you implement the API call
-- A YouTube/Vimeo downloader — that's a different concern (legal grey zone, separate tooling)
-- A speaker diarization tool — needs separate model
+- A working transcription tool - you implement the API call
+- A YouTube/Vimeo downloader - that's a different concern (legal grey zone, separate tooling)
+- A speaker diarization tool - needs separate model
 </scope>

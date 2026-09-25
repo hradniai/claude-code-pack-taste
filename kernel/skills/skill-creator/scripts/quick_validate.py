@@ -9,8 +9,27 @@ import re
 import yaml
 from pathlib import Path
 
-def validate_skill(skill_path):
-    """Basic validation of a skill"""
+# Agent Skills spec fields (https://agentskills.io/specification): the only keys that
+# claude.ai upload, the Skills API and .skill packaging accept - any other key is a hard error there.
+AGENT_SKILLS_SPEC_PROPERTIES = {
+    'name', 'description', 'license', 'compatibility', 'metadata', 'allowed-tools',
+}
+
+# Every field in the Claude Code frontmatter reference
+# (https://code.claude.com/docs/en/skills#frontmatter-reference). Claude Code silently
+# ignores an unknown key, so a misspelled one never warns at runtime - catching it is this check's job.
+CLAUDE_CODE_PROPERTIES = AGENT_SKILLS_SPEC_PROPERTIES | {
+    'when_to_use', 'argument-hint', 'arguments', 'disable-model-invocation', 'user-invocable',
+    'disallowed-tools', 'model', 'effort', 'context', 'agent', 'background', 'hooks', 'paths', 'shell',
+}
+
+def validate_skill(skill_path, allowed_properties=AGENT_SKILLS_SPEC_PROPERTIES):
+    """Basic validation of a skill.
+
+    The default allow-list is the Agent Skills spec set, because package_skill.py calls this
+    before building a .skill file for claude.ai. Pass CLAUDE_CODE_PROPERTIES to validate a
+    skill that only ever runs in Claude Code.
+    """
     skill_path = Path(skill_path)
 
     # Check SKILL.md exists
@@ -38,15 +57,12 @@ def validate_skill(skill_path):
     except yaml.YAMLError as e:
         return False, f"Invalid YAML in frontmatter: {e}"
 
-    # Define allowed properties
-    ALLOWED_PROPERTIES = {'name', 'description', 'license', 'allowed-tools', 'metadata'}
-
     # Check for unexpected properties (excluding nested keys under metadata)
-    unexpected_keys = set(frontmatter.keys()) - ALLOWED_PROPERTIES
+    unexpected_keys = set(frontmatter.keys()) - set(allowed_properties)
     if unexpected_keys:
         return False, (
             f"Unexpected key(s) in SKILL.md frontmatter: {', '.join(sorted(unexpected_keys))}. "
-            f"Allowed properties are: {', '.join(sorted(ALLOWED_PROPERTIES))}"
+            f"Allowed properties are: {', '.join(sorted(allowed_properties))}"
         )
 
     # Check required fields
@@ -86,10 +102,17 @@ def validate_skill(skill_path):
     return True, "Skill is valid!"
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python quick_validate.py <skill_directory>")
+    args = sys.argv[1:]
+    spec_only = '--spec' in args
+    if spec_only:
+        args.remove('--spec')
+    if len(args) != 1:
+        print("Usage: python quick_validate.py [--spec] <skill_directory>")
+        print("  default: allow every Claude Code frontmatter field")
+        print("  --spec:  allow only the Agent Skills spec fields (claude.ai upload, .skill packaging)")
         sys.exit(1)
-    
-    valid, message = validate_skill(sys.argv[1])
+
+    allowed = AGENT_SKILLS_SPEC_PROPERTIES if spec_only else CLAUDE_CODE_PROPERTIES
+    valid, message = validate_skill(args[0], allowed)
     print(message)
     sys.exit(0 if valid else 1)

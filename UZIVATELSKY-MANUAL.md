@@ -4,7 +4,7 @@ title: "Uživatelský manuál"
 status: approved
 summary: "Tenhle Pack je hotové, bezpečné nastavení pro **Claude Code (CC)** - terminálovou appku od Anthropic, která ti reálně dělá věci na počítači: píše soubory, spouští příkazy, umí nainstalovat skoro cokol"
 created: 2026-06-13 00:00
-updated: 2026-06-13 00:00
+updated: 2026-09-25 10:50
 owner: Šimon Hradní
 client: ~
 path: UZIVATELSKY-MANUAL.md
@@ -38,11 +38,11 @@ Při instalaci se tě Claude zeptá, jestli chceš i doplněk **Taste AI Quality
 - **Vyhodnocení promptu.** Řekneš „vyhodnoť mi tenhle prompt" a vybereš, jestli má hodnotit jeden model, nebo porota několika modelů. Výsledek se uloží k projektu do složky `prompt-evals/` a Claude ti ho česky vysvětlí. Do testovacích příkladů nedávej osobní údaje klientů ani klíče, ukládají se totiž i s výsledkem. Když do poroty vezmeš Claude Code nebo Codex, prompt si opravdu spustí s nástroji, ale v oddělené kleci: vidí jen zadání a soubory, které mu k tomu dáš. Když má pracovat přímo v tvém projektu, řekni to.
 - **Kontrola cizího skillu.** Než si od někoho nainstaluješ skill nebo plugin, řekneš „zkontroluj mi tuhle složku" a dostaneš přehled, co v ní je a co by mohlo být problém. Nic se při tom nespouští.
 
-Jedna věc je na tobě: složka `_CONTEXT/llms/` se třemi soubory o modelech, které používáš. Dokud je nevyplníš, doplněk práci odmítne a řekne ti, co chybí. Je to schválně, aby ti neradil podle zastaralých informací. Vyplnit je můžeš spolu s Claudem, vést si je ale budeš sám.
+Jedna věc je na tobě: ve složce `_CONTEXT/llms/` jsou tři soubory o modelech, které používáš, a po instalaci jsou prázdné. Dokud je nevyplníš, doplněk práci odmítne a řekne ti, co chybí. Je to schválně, aby ti neradil podle zastaralých informací. Vyplnit je můžeš spolu s Claudem, vést si je ale budeš sám. Vedle nich leží čtyři referenční dokumenty s datem poslední kontroly, ze kterých můžeš při vyplňování vycházet. Doplněk je nečte.
 
 ## Instalace
 
-Odkaz na tohle repo dej do Claude Code a řekni mu, ať si to načte a postupuje podle `INSTRUCTIONS.md`.
+Naklonuj si repo (příkaz je v `README.md`), spusť v jeho složce `claude` a napiš mu, ať postupuje podle `INSTRUCTIONS.md`.
 
 Claude tě provede nastavením otázku po otázce. **Každý krok schvaluješ ty.** Když už nějaké nastavení máš, Claude ho **nepřepíše** - zazálohuje ho, podívá se, co tam máš, porovná s Packem a **doporučí ti, jak to upravit na míru tobě**.
 
@@ -50,7 +50,7 @@ Claude tě provede nastavením otázku po otázce. **Každý krok schvaluješ ty
 
 1. **Čti plán, než řekneš „ano".** Většina chyb vzniká z odsouhlasení nepřečteného plánu.
 2. **Když Claude něco nesmí, neobcházej to.** Řekni mu cíl, ne work-around. Navrhne bezpečnější cestu, nebo ti dá příkaz ke spuštění ručně.
-3. **API klíče a tokeny dej do `~/.claude/.env`.** Claude do hodnot nevidí, pracuje jen s názvy klíčů a používá je přes program, který klíč nikdy neukáže. Citlivý klíč patří do `.env` (Claude ho nepřečte). Jen málo rizikové hodnoty, které Claude číst smí (notifikační webhook, kontaktní e-mail), dej do `.env.shared`.
+3. **API klíče a tokeny dej do `.env` tam, kde se používají.** Klíče pro AI Quality Kit patří do `_CONTEXT/llms/.env`, klíče konkrétního projektu do `.env` v jeho složce a do `~/.claude/.env` jen klíče tvých vlastních automatizací, které běží napříč projekty. Claude do hodnot nevidí, pracuje jen s názvy klíčů a používá je přes program, který klíč nikdy neukáže. Jen málo rizikové hodnoty, které Claude číst smí (notifikační webhook, kontaktní e-mail), dej do `.env.shared`.
 4. **Statusbar dole čti.** Hlavně stav kontextu a kolik z týmového limitu jedeš.
 5. **Nový projekt = `/setup`.** Připraví složky a šablony, předtím se doptá, jak to chceš mít ty.
 

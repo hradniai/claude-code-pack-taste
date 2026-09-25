@@ -2,9 +2,9 @@
 type: notes
 title: "User Profile"
 status: approved
-summary: "Fill in your details. Claude reads this across all sessions to tailor work to you specifically. Keep it under 200 lines and update when material things change."
+summary: "Fill in your details. The install imports this file from ~/.claude/AGENTS.md, so every session reads it to tailor work to you specifically. Keep it under 200 lines and update when material things change."
 created: 2026-05-13 12:08
-updated: 2026-05-13 12:08
+updated: 2026-09-23 13:30
 owner: Šimon Hradní
 client: ~
 path: workspace/_CONTEXT/user-profile.md
@@ -15,7 +15,7 @@ release: latest
 
 # User Profile
 
-> Fill in your details. Claude reads this across all sessions to tailor work to you specifically. Keep it under 200 lines and update when material things change.
+> Fill in your details. The install imports this file from `~/.claude/AGENTS.md`, so every session reads it to tailor work to you specifically. Keep it under 200 lines and update when material things change.
 
 ## Who I am
 

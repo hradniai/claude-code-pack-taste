@@ -4,7 +4,7 @@ title: "{{CLIENT_NAME}}"
 status: approved
 summary: "Created: YYYY-MM-DD"
 created: 2026-05-13 12:08
-updated: 2026-05-13 12:08
+updated: 2026-09-23 13:30
 owner: Šimon Hradní
 client: ~
 path: workspace/_CLIENTS/_example-client/README.md
@@ -23,7 +23,7 @@ Replace this placeholder with a short summary of the engagement.
 
 ## Status
 
-New client — setup pending.
+New client - setup pending.
 
 ## Changelog
 
