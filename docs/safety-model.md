@@ -22,7 +22,7 @@ What the starter pack protects against, what it doesn't, and where you'd reach f
 ### Accidental destruction by Claude
 - `rm -r`, `rm -rf`, `rm -fr` (any recursive/forced delete) - denied at permission level
 - `mv -f` - denied (forced overwrite)
-- `git reset --hard`, `git push --force`, `git clean -f`, `git branch -D` - denied
+- `git reset --hard`, `git push --force`, `git clean -f`, `git branch -D` - denied, also when git options such as `-C <dir>`, `-c key=value` or `--git-dir` come before the subcommand, which a plain `git reset --hard*` rule does not match. The ask rules for `push`, `rebase` and `merge` cover the `-C <dir>` form only.
 - `git commit --no-verify`, `-n`, `-a` - denied (skip-hook escapes)
 - `sudo`, `chown`, `launchctl` - denied (privilege escalation)
 - `chmod -R`, `chmod 777`, `chmod 666`, `chmod +s` - denied (broad permissions)

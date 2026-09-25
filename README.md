@@ -30,7 +30,6 @@ Pokud je tvoje zkušenost s AI claude.ai a nic víc - začni krátkým [**`UZIVA
 ### Kernel (`~/.claude/`)
 - **Restrictive `settings.json`** - destructive bash patterns, sensitive file reads, browser cookie/history dirs, and `--no-verify` style escapes are denied at the global level. Bypass mode is locked off.
 - **Bash safety hook** - catches two-step download-execute, subshell bypasses, a recursive `rm` hidden in a chained command, a `mv` that would silently overwrite an existing file, secret-file reads (every `.env` / `.env.*` except the readable `.env.shared` soft tier and non-secret templates, via bash or the Read tool), browser data extraction, and `python -c` bypasses.
-- **Context-bloat guard** - soft brake on `Read` of files larger than ~50k tokens. Forces Claude to either chunk the read or ask the user to confirm. Prevents the "Claude loaded an 80MB CSV and now the session is dead" scenario.
 - **Time-injection hook** - adds the current local time to Claude's context every prompt.
 - **Statusline** - three-line live status (model · throughput · cost / project · branch · context / 5-hour and 7-day rate-limit usage). Lets you see when you're burning through your team-plan allotment.
 - **Four rules** - documentation standard (incl. frontmatter standard pointer), respect-denies behavior (updated three-tier env model), subagent usage guide, language (which language to use, plus native-Czech style: banned AI calques, typography). The frontmatter standard itself ships as an on-demand reference in `~/.claude/reference/`, not as an auto-loaded rule.
@@ -113,6 +112,9 @@ What changed in this fork:
 - **`client-data-check` skill added** - offline PII scanner.
 - **`inbox-processor.sh` hook removed** - per-edit API calls were nudging team-plan usage; teams can re-enable it from the upstream if they want.
 - **`notes-research.sh` hook and `notes-convention.md` rule removed** - the hook never worked on a fresh install, and making it work would send note text to the Anthropic API at a cost per entry. `notes.md` stays a plain file for ideas, with no automation.
+- **`context-bloat-guard.py` hook removed** - Claude Code's Read tool now caps large text files itself (a partial view instead of a dead session) and resizes large images, while the guard judged files by byte size and so blocked any screenshot over roughly 200 KB and any PDF above that size, even a read of a few pages.
+- **Risky-git deny rules survive git options** - a rule like `git reset --hard*` does not match `git -C <dir> reset --hard` (or `-c`, `--git-dir`), so every risky-git deny rule now has a `git * ...` twin, force pushes that end in `-f` are caught, and the git ask rules have a `git -C *` twin. The four pipe-to-shell deny rules are gone: Claude Code matches rules per subcommand, so a rule containing a pipe never matched; the Bash safety hook blocks those commands.
+- **`list-env-keys.sh` no longer leaks multi-line values** - it lists process variables with `compgen -e` instead of `env | cut`, which passed a PEM key's continuation lines through.
 - **`_CLIENTS/taste/` scaffold included** - pre-built example client workspace.
 - **INSTRUCTIONS.md interactive interview rewritten** - explicit workspace-path prompt (no `~/Documents/` assumption), OS-specific dependency setup, conflict checks before any overwrite.
 - **Frontmatter standard added** (`reference/frontmatter-standard.md`, an on-demand reference, not an auto-loaded rule) - unified OKF-aligned YAML frontmatter for every markdown artifact, closed type buckets, predefined tag vocabulary.

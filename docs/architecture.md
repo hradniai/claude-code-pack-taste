@@ -82,7 +82,6 @@ When Claude uses a tool, multiple things happen:
 Claude uses a tool (Bash, Read, Edit, Write, ...)
         ↓
 PreToolUse hooks fire   ← bash-safety-extended.py (Bash and Read) blocks dangerous patterns and env-file reads
-                          context-bloat-guard.py (Read) brakes reads of very large files
         ↓
 Permission engine       ← allow/deny/ask matched against settings.json
         ↓
@@ -107,7 +106,6 @@ Every `notes.md` is a plain file for ideas and impulses. No hook watches it and 
 |-------|------------|-----------|
 | Claude Code session | `~/.claude/CLAUDE.md`, `~/.claude/rules/*`, project `AGENTS.md/CLAUDE.md` | Files via Edit/Write tools (with permissions) |
 | `bash-safety-extended.py` hook | hook stdin (Bash and Read tool input) | stderr (block reasons), exit code 0/2 |
-| `context-bloat-guard.py` hook | hook stdin (Read tool input), size of the target file | stderr (warning or block reason), exit code 0/2 |
 | `list-env-keys.sh` script | process env, `~/.claude/.env`, `./.env` | stdout (var names only) |
 
 ## Trust boundary

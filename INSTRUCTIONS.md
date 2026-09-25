@@ -235,7 +235,6 @@ Contents going in:
 - `scripts/list-env-keys.sh` - lets Claude see *names* of credential env vars without values
 - `hooks/`:
   - `bash-safety-extended.py` (PreToolUse Bash and Read) - blocks bypass patterns and reads of protected env files
-  - `context-bloat-guard.py` (PreToolUse Read) - soft brake on huge file reads
   - `inject-current-time.sh` (UserPromptSubmit) - current time in every prompt
 - `skills/setup/`, `skill-creator/`, `prd-creator/`, `dr-prompt/`, `client-data-check/`, `idea-file-creator/`
 - `templates/` - five scaffolding templates (klient, dev, business, app, general), the `.env.example` files the setup skill copies, and `claude-env.example` for Step 8
@@ -243,7 +242,7 @@ Contents going in:
 
 **Critical - existing setup: analyze, recommend, don't overwrite.** If `~/.claude/settings.json` (or a `rules/`/`hooks/` directory) already existed in the backup, do NOT blindly replace it. First read the user's existing config - permissions, hooks, env, rules - and compare it against what this pack ships. Then present a tailored, area-by-area recommendation: what of theirs is worth keeping, what the pack adds that's worth adopting, where the two overlap or conflict, and a suggested result tuned to how this user actually works (ask briefly if it's not obvious). The user decides per area; then write the agreed result. Replace wholesale only if there is nothing meaningful there or they ask for it. The backup protects the original either way - the install never auto-merges JSON, so the merged result is written explicitly.
 
-**Leftover from an older pack version.** If the existing `settings.json` still has a `PostToolUse` entry that runs `notes-research.sh`, it comes from an earlier version of this pack, which has since dropped that hook: it did not work on a fresh install, and a working version would send the text of every note to the Anthropic API at a cost. Include it in the recommendation: remove that entry, and move `~/.claude/hooks/notes-research.sh` and `~/.claude/rules/notes-convention.md` (if present) to a backup path, because the copy below does not delete old files. The user decides, as with every other area. Their `notes.md` files stay as they are.
+**Leftover from an older pack version.** If the existing `settings.json` still has a `PostToolUse` entry that runs `notes-research.sh`, it comes from an earlier version of this pack, which has since dropped that hook: it did not work on a fresh install, and a working version would send the text of every note to the Anthropic API at a cost. Include it in the recommendation: remove that entry, and move `~/.claude/hooks/notes-research.sh` and `~/.claude/rules/notes-convention.md` (if present) to a backup path, because the copy below does not delete old files. The user decides, as with every other area. Their `notes.md` files stay as they are. The same applies to a `PreToolUse` `Read` entry that runs `context-bloat-guard.py`: Claude Code's Read tool now limits large files itself, and the guard judged files by byte size, so it blocked screenshots over roughly 200 KB and even a few-page read of a larger PDF; recommend removing the entry and moving `~/.claude/hooks/context-bloat-guard.py` to the backup path.
 
 Execute the copy:
 

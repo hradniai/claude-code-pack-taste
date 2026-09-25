@@ -89,7 +89,9 @@ extract_names_from_envfile() {
         extract_names_from_envfile "$TARGET_FILE"
     else
         # Default mode: process env + ~/.claude/.env + ./.env
-        env | cut -d= -f1
+        # compgen -e lists exported names only; `env | cut` would pass through the
+        # continuation lines of a multi-line value (e.g. a PEM key), leaking them.
+        compgen -e
         extract_names_from_envfile "$HOME/.claude/.env"
         extract_names_from_envfile "./.env"
     fi
