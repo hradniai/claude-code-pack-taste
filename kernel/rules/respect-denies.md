@@ -4,7 +4,7 @@ title: "respect-denies"
 status: approved
 summary: "Protocol for handling denied commands: stop immediately, inform user of the denial reason, provide exact copy-paste command they can run themselves, and wait for instruction."
 created: 2026-06-13 00:00
-updated: 2026-06-13 00:00
+updated: 2026-09-23 13:30
 owner: Šimon Hradní
 client: ~
 path: kernel/rules/respect-denies.md
@@ -60,7 +60,7 @@ Denies represent the user's **intentional safety boundary**. Bypassing them - ev
 
 ## Categories denied at the global level - do not even attempt
 
-**Destructive bash:** any recursive/forced delete (`rm -r`, `rm -rf`, `rm -fr`, `mv -f`), privilege escalation (`sudo`, `chown`, `launchctl`), broad permissions (`chmod -R`, `chmod 777/666`), process control (`pkill`, `killall`, `shutdown`, `reboot`), env mutation (`export`), publishing (`npm publish`, `npm install -g`).
+**Destructive bash:** any recursive/forced delete (`rm -r`, `rm -rf`, `rm -fr`, `mv -f`), privilege escalation (`sudo`, `chown`, `launchctl`), broad permissions (`chmod -R`, `chmod 777/666`), process control (`pkill`, `shutdown`, `reboot`), env mutation (`export`), publishing (`npm publish`, `npm install -g`).
 
 **Risky git:** force push, `reset --hard`, `clean -f`, `branch -D`, `checkout -- *`, `commit --no-verify` / `-n` / `-a`.
 
@@ -70,10 +70,13 @@ Denies represent the user's **intentional safety boundary**. Bypassing them - ev
 
 **Sensitive reads:** `~/.ssh/`, `~/.aws/`, `~/.gnupg/`, `~/.kube/`, `~/.azure/`, `~/.docker/config.json`, `~/.npmrc`, `~/.pypirc`, `~/.git-credentials`, `~/Library/Keychains/`, `**/.env*`.
 
-**Sensitive writes:** `~/.bashrc`, `~/.zshrc`, `~/.zprofile`, `~/.ssh/`, `**/.env*`, `~/.claude/settings*`.
+**Sensitive writes:** `~/.bashrc`, `~/.zshrc`, `~/.zprofile`, `~/.ssh/`, `**/.env*`.
+
+## Asks first - in the `ask` list, not denied
+`killall`, and edits to `~/.claude/settings*`. Attempt these only when the task needs them; the user confirms each one in the permission prompt. Do not route a settings change around that prompt (for example through a script) unless the user asked for that exact change.
 
 ## When unsure
-If a command might fall into any of the categories above, **do not attempt it**. It is far cheaper (in tokens and time) to ask the user once than to retry-fail through the permission engine.
+If a command might fall into any of the denied categories above, **do not attempt it**. It is far cheaper (in tokens and time) to ask the user once than to retry-fail through the permission engine.
 
 ## For environment variables and secrets
 

@@ -12,7 +12,7 @@ This skill provides guidance for creating effective skills.
 
 Skills are modular, self-contained packages that extend Claude's capabilities by providing
 specialized knowledge, workflows, and tools. Think of them as "onboarding guides" for specific
-domains or tasks—they transform Claude from a general-purpose agent into a specialized agent
+domains or tasks - they transform Claude from a general-purpose agent into a specialized agent
 equipped with procedural knowledge that no model can fully possess.
 
 ### What Skills Provide
@@ -65,7 +65,7 @@ skill-name/
 
 Every SKILL.md consists of:
 
-- **Frontmatter** (YAML): Contains `name` and `description` fields. These are the only fields that Claude reads to determine when the skill gets used, thus it is very important to be clear and comprehensive in describing what the skill is, and when it should be used.
+- **Frontmatter** (YAML): Contains `name` and `description` fields. These are the main fields Claude reads to determine when the skill gets used, thus it is very important to be clear and comprehensive in describing what the skill is, and when it should be used. In Claude Code two optional fields also shape selection: `when_to_use` is appended to `description` in the skill listing, and `paths` limits automatic loading to work on matching files ([frontmatter reference](https://code.claude.com/docs/en/skills#frontmatter-reference)).
 - **Body** (Markdown): Instructions and guidance for using the skill. Only loaded AFTER the skill triggers (if at all).
 
 #### Bundled Resources (optional)
@@ -88,7 +88,7 @@ Documentation and reference material intended to be loaded as needed into contex
 - **Use cases**: Database schemas, API documentation, domain knowledge, company policies, detailed workflow guides
 - **Benefits**: Keeps SKILL.md lean, loaded only when Claude determines it's needed
 - **Best practice**: If files are large (>10k words), include grep search patterns in SKILL.md
-- **Avoid duplication**: Information should live in either SKILL.md or references files, not both. Prefer references files for detailed information unless it's truly core to the skill—this keeps SKILL.md lean while making information discoverable without hogging the context window. Keep only essential procedural instructions and workflow guidance in SKILL.md; move detailed reference material, schemas, and examples to references files.
+- **Avoid duplication**: Information should live in either SKILL.md or references files, not both. Prefer references files for detailed information unless it's truly core to the skill - this keeps SKILL.md lean while making information discoverable without hogging the context window. Keep only essential procedural instructions and workflow guidance in SKILL.md; move detailed reference material, schemas, and examples to references files.
 
 ##### Assets (`assets/`)
 
@@ -311,13 +311,15 @@ Write the YAML frontmatter with `name` and `description`:
   - Include all "when to use" information here - Not in the body. The body is only loaded after triggering, so "When to Use This Skill" sections in the body are not helpful to Claude.
   - Example description for a `docx` skill: "Comprehensive document creation, editing, and analysis with support for tracked changes, comments, formatting preservation, and text extraction. Use when Claude needs to work with professional documents (.docx files) for: (1) Creating new documents, (2) Modifying or editing content, (3) Working with tracked changes, (4) Adding comments, or any other document tasks"
 
-Do not include any other fields in YAML frontmatter.
+Use only the documented frontmatter fields. Claude Code accepts every field in its [frontmatter reference](https://code.claude.com/docs/en/skills#frontmatter-reference), for example `when_to_use`, `argument-hint`, `disable-model-invocation`, `allowed-tools`, `model`, `effort`, `context` or `paths`. A skill packaged as a `.skill` file or uploaded to claude.ai may use only the six [Agent Skills spec](https://agentskills.io/specification) fields: `name`, `description`, `license`, `compatibility`, `metadata`, `allowed-tools`; any other key fails there with a hard error. Claude Code silently ignores a misspelled field, so run `scripts/quick_validate.py <path/to/skill-folder>` to catch it (add `--spec` to check against the six-field set).
 
 ##### Body
 
 Write instructions for using the skill and its bundled resources.
 
 ### Step 5: Packaging a Skill
+
+Packaging is only for uploading a skill to claude.ai or handing it out as a file; Claude Code needs none of it, because there a skill is just its folder under `~/.claude/skills/<skill-name>/`, a project's `.claude/skills/<skill-name>/`, or a plugin's `skills/` directory ([where skills live](https://code.claude.com/docs/en/skills#where-skills-live)).
 
 Once development of the skill is complete, it must be packaged into a distributable .skill file that gets shared with the user. The packaging process automatically validates the skill first to ensure it meets all requirements:
 

@@ -4,7 +4,7 @@ title: "Notes"
 status: approved
 summary: "Ideas, brain dumps, future automations."
 created: 2026-06-13 00:00
-updated: 2026-06-13 00:00
+updated: 2026-09-25 10:50
 owner: Šimon Hradní
 client: ~
 path: workspace/_CLIENTS/taste/notes.md
@@ -17,4 +17,4 @@ release: latest
 
 Ideas, brain dumps, future automations.
 
-Items with `→ research` marker trigger background auto-research via the notes-research hook. See `~/.claude/rules/notes-convention.md`.
+A plain file: nothing reads it automatically and nothing is sent anywhere.

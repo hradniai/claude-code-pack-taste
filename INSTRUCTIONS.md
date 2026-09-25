@@ -4,7 +4,7 @@ title: "Instructions for Claude - Pack Installation"
 status: approved
 summary: "You are reading this because the user just cloned the Claude Code Pack and ran `claude` in the repo root."
 created: 2026-06-16 00:52
-updated: 2026-06-16 16:59
+updated: 2026-09-25 10:50
 owner: Šimon Hradní
 client: ~
 path: INSTRUCTIONS.md
@@ -230,18 +230,19 @@ Contents going in:
 - `settings.json` - restrictive baseline; bypass mode locked off
 - `AGENTS.md` + `CLAUDE.md` (symlink)
 - `statusline.sh` - 3-line status bar (model · cost / project · ctx / 5h · 7d rate limits)
-- `rules/` - six rules (documentation, frontmatter-standard, respect-denies, subagents, notes, language)
+- `rules/` - four rules (documentation, respect-denies, subagents, language)
+- `reference/frontmatter-standard.md` - the frontmatter standard, read on demand, not auto-loaded
 - `scripts/list-env-keys.sh` - lets Claude see *names* of credential env vars without values
 - `hooks/`:
-  - `bash-safety-extended.py` (PreToolUse Bash) - blocks bypass patterns
-  - `context-bloat-guard.py` (PreToolUse Read) - soft brake on huge file reads
-  - `notes-research.sh` (PostToolUse Edit/Write) - auto-research on `notes.md` markers
+  - `bash-safety-extended.py` (PreToolUse Bash and Read) - blocks bypass patterns and reads of protected env files
   - `inject-current-time.sh` (UserPromptSubmit) - current time in every prompt
 - `skills/setup/`, `skill-creator/`, `prd-creator/`, `dr-prompt/`, `client-data-check/`, `idea-file-creator/`
-- `templates/` - five scaffolding templates: klient, dev, business, app, general
+- `templates/` - five scaffolding templates (klient, dev, business, app, general), the `.env.example` files the setup skill copies, and `claude-env.example` for Step 8
 - `agents/` - `research-analyst` + README
 
 **Critical - existing setup: analyze, recommend, don't overwrite.** If `~/.claude/settings.json` (or a `rules/`/`hooks/` directory) already existed in the backup, do NOT blindly replace it. First read the user's existing config - permissions, hooks, env, rules - and compare it against what this pack ships. Then present a tailored, area-by-area recommendation: what of theirs is worth keeping, what the pack adds that's worth adopting, where the two overlap or conflict, and a suggested result tuned to how this user actually works (ask briefly if it's not obvious). The user decides per area; then write the agreed result. Replace wholesale only if there is nothing meaningful there or they ask for it. The backup protects the original either way - the install never auto-merges JSON, so the merged result is written explicitly.
+
+**Leftover from an older pack version.** If the existing `settings.json` still has a `PostToolUse` entry that runs `notes-research.sh`, it comes from an earlier version of this pack, which has since dropped that hook: it did not work on a fresh install, and a working version would send the text of every note to the Anthropic API at a cost. Include it in the recommendation: remove that entry, and move `~/.claude/hooks/notes-research.sh` and `~/.claude/rules/notes-convention.md` (if present) to a backup path, because the copy below does not delete old files. The user decides, as with every other area. Their `notes.md` files stay as they are. The same applies to a `PreToolUse` `Read` entry that runs `context-bloat-guard.py`: Claude Code's Read tool now limits large files itself, and the guard judged files by byte size, so it blocked screenshots over roughly 200 KB and even a few-page read of a larger PDF; recommend removing the entry and moving `~/.claude/hooks/context-bloat-guard.py` to the backup path.
 
 Execute the copy:
 
@@ -268,7 +269,7 @@ Should show `CLAUDE.md -> AGENTS.md`.
 
 ## Step 5 - Personal profile interview
 
-The `user-profile.md` file in `<context-dir>/` is read by Claude across all sessions. The more accurate it is, the more tailored the work.
+The `user-profile.md` file in `<context-dir>/` is read by Claude in every session, through an import Step 7b adds to `~/.claude/AGENTS.md`. The more accurate it is, the more tailored the work.
 
 Quick interview - 4 questions, 1–2 sentences each, or "skip" to leave blank:
 
@@ -287,7 +288,7 @@ Quick interview - 4 questions, 1–2 sentences each, or "skip" to leave blank:
    (např. „česky klientské dokumenty a poznámky, anglicky kód a systémové soubory")
 ```
 
-Write the answers into `<base-path>/<context-dir>/user-profile.md`, replacing the empty placeholders in the template.
+Keep the answers; do not write any file yet. The context directory does not exist until Step 7 copies the workspace, and Step 7 skips every directory that already exists, so creating `user-profile.md` now would stop the whole context directory from being copied. Step 7b writes the file and makes every session load it.
 
 ---
 
@@ -306,11 +307,7 @@ Co s nimi?
 4. Smaž všechny příklady včetně `taste/` - začneš čistě
 ```
 
-Apply choice. If deleting, use `mv` to a backup path, not `rm -rf`:
-
-```bash
-mv "<base-path>/<clients-dir>/_example-client" "<base-path>/.removed-examples/$(date +%Y%m%d-%H%M%S)-example-client"
-```
+Keep the choice (and, for choice 2, the client's name); do not move or rename anything yet. The examples do not exist under `<base-path>` until Step 7 copies the workspace. Step 7c applies the choice right after the copy.
 
 ---
 
@@ -337,6 +334,75 @@ find "<base-path>" -name 'AGENTS.md' -not -path '*/node_modules/*' | while read 
 done
 ```
 
+### 7a - Tell the git safety net where the workspace lives
+
+`~/.claude/scripts/git-autosave.sh` (the local git safety net `/setup` turns on) works only inside the workspace root and does nothing anywhere else. It reads that root from `PACK_WORKSPACE_ROOT`, falling back to `~/Documents`. Write the base path from Step 2 into the `env` block of `~/.claude/settings.json`. **Merge, never overwrite** - the file already holds permissions, hooks and the statusline:
+
+```bash
+python3 - "<base-path>" <<'EOF'
+import json, os, sys
+from pathlib import Path
+root = os.path.abspath(os.path.expanduser(sys.argv[1]))
+p = Path.home() / ".claude" / "settings.json"
+s = json.loads(p.read_text()) if p.exists() else {}
+s.setdefault("env", {})["PACK_WORKSPACE_ROOT"] = root
+p.write_text(json.dumps(s, indent=2))
+print("PACK_WORKSPACE_ROOT ->", root)
+EOF
+```
+
+The value applies from the next session, which the Step 9 restart covers.
+
+### 7b - Write the user profile and load it in every session
+
+Write the Step 5 answers into `<base-path>/<context-dir>/user-profile.md` (the copy Step 7 just made), replacing the empty placeholders in the template. If Step 2b kept the user's own context directory, merge the answers into their existing file only after they confirm; never overwrite it.
+
+Then make every session load the profile. Nothing else reads it: append an `@` import of the file to `~/.claude/AGENTS.md` (Claude Code reads it through the `CLAUDE.md` symlink), plus one line that points Claude at the user's best practices. The snippet turns the context directory into an absolute path (resolving `~`) and adds each line only if it is not there yet, so a re-run never duplicates it:
+
+```bash
+python3 - "<base-path>/<context-dir>" <<'EOF'
+import os, sys
+from pathlib import Path
+ctx = os.path.abspath(os.path.expanduser(sys.argv[1]))
+p = Path.home() / ".claude" / "AGENTS.md"
+wanted = [
+    f"@{ctx}/user-profile.md",
+    f"Before generic advice on a recurring topic, check {ctx}/best-practices/ for the user's own approach.",
+]
+text = p.read_text()
+missing = [line for line in wanted if line not in text.splitlines()]
+if missing:
+    p.write_text(text.rstrip("\n") + "\n\n" + "\n".join(missing) + "\n")
+print("added:" if missing else "already present:", *(missing or wanted), sep="\n")
+EOF
+```
+
+### 7c - Apply the example content choice
+
+The workspace now exists, so apply the Step 6 choice. Choice 1 needs nothing. Skip any directory Step 2b kept as the user's own: its examples were never copied.
+
+Choice 2 renames the example client to the real name, only if that name is still free:
+
+```bash
+if [ -e "<base-path>/<clients-dir>/<client-name>" ]; then
+  echo "EXISTS: <client-name> - ask the user for another name"
+else
+  mv "<base-path>/<clients-dir>/_example-client" "<base-path>/<clients-dir>/<client-name>"
+fi
+```
+
+Choices 3 and 4 remove examples by moving them to a backup path, never `rm -rf`. Run the lines for the examples the user dropped; the `taste` line belongs to choice 4 only. Each line skips an example that is already gone, so a re-run does not fail:
+
+```bash
+mkdir -p "<base-path>/.removed-examples"
+[ -e "<base-path>/<clients-dir>/_example-client" ] && mv "<base-path>/<clients-dir>/_example-client" "<base-path>/.removed-examples/$(date +%Y%m%d-%H%M%S)-example-client"
+[ -e "<base-path>/<apps-dir>/_example-app-transcribe" ] && mv "<base-path>/<apps-dir>/_example-app-transcribe" "<base-path>/.removed-examples/$(date +%Y%m%d-%H%M%S)-example-app-transcribe"
+[ -e "<base-path>/<clients-dir>/taste" ] && mv "<base-path>/<clients-dir>/taste" "<base-path>/.removed-examples/$(date +%Y%m%d-%H%M%S)-taste"
+true
+```
+
+Tell the user where the removed examples went (`<base-path>/.removed-examples/`).
+
 ---
 
 ## Step 7.5 - Install Taste AI Quality Kit
@@ -351,15 +417,17 @@ Explain the split before installing anything:
 >
 > Mám to nainstalovat?
 
-Wait for a yes. Then run the three commands from the cloned Pack folder - the same working directory as every other command in this file:
+Wait for a yes. Then run the three commands:
 
 ```bash
-claude plugin marketplace add "$(pwd)"
+claude plugin marketplace add hradniai/claude-code-pack-taste
 claude plugin install taste-ai-quality-kit@claude-code-pack-taste
 claude plugin list
 ```
 
-The first line registers this repository as a plugin source, the second installs the plugin from it, the third confirms it is there. `claude plugin install ./plugins/taste-ai-quality-kit` does not work - `claude plugin install` installs from a registered source only, never from a bare folder path. Once this branch is merged into the repository's main branch, `claude plugin marketplace add hradniai/claude-code-pack-taste` is expected to work for later updates; that path is not verified yet, so do not use it for this install.
+The first line registers the public GitHub repository as a plugin source named `claude-code-pack-taste`, the second installs the plugin from it, the third confirms it is there. Because the source is GitHub, later updates need no clone (see Step 11). `claude plugin install ./plugins/taste-ai-quality-kit` does not work - `claude plugin install` installs from a registered source only, never from a bare folder path.
+
+Fallback, only when GitHub is unreachable or the user installs from a fork or a locally changed clone: run `claude plugin marketplace add "$(pwd)"` from the cloned Pack folder instead of the first line, then the same two remaining lines. That source reads from the clone, so the clone must stay on disk.
 
 ### 7.5a - Point the plugin at the user's context directory
 
@@ -389,16 +457,18 @@ The value applies from the next session, which the Step 9 restart covers.
 
 > Ve složce `llms/` máš tři soubory: `models.md` (modely, které používáš), `prompting.md` (jak se který z nich promptuje) a `decisions.md` (co sis u sebe rozhodl a proč). Teď jsou prázdné a plugin to pozná - dokud je nevyplníš, práci odmítne a řekne ti, který soubor mu chybí. Je to schválně: radši nic než rada podle půl roku starých informací.
 >
+> Vedle nich leží ještě čtyři referenční dokumenty: `model-lineup.md`, `model-reference-prompting.md`, `ai-prompt-guidelines.md` a `codex-cli-reference.md`. Každý má uvnitř datum poslední kontroly a při vyplňování z nich můžeš vycházet. Plugin je nečte, řídí se jen tvými třemi soubory.
+>
 > Vyplnit je můžeme spolu. Kdykoli mi řekni „pojďme dopsat `models.md`", společně dohledáme aktuální informace a zapíšeme je. Vedeš si je ale ty, plugin ti je nikdy nepřepíše ani nedoplní.
 
-Each of the three files starts with `status: TODO` in its header. That marker is what keeps the plugin closed, so it stays there until the user replaces the placeholder text with real records.
+Each of the three files starts with `status: TODO` in its header. That marker is what keeps the plugin closed (it reports `CONTEXT_NOT_READY`), so it stays there until the user replaces the placeholder text with real records. The four dated reference documents ship beside them only as a starting point; the plugin reads the three records and nothing else.
 
 ### 7.5c - Keys, only when the user wants a live evaluation
 
 A live evaluation sends the prompt to a model, which needs an access key. The keys live in `llms/.env`, next to the three files. Create it from the template only when the user asks for a live run:
 
 ```bash
-cp "<base-path>/<chosen-context-dir>/llms/.env.example" "<base-path>/<chosen-context-dir>/llms/.env"
+[ -f "<base-path>/<chosen-context-dir>/llms/.env" ] || cp "<base-path>/<chosen-context-dir>/llms/.env.example" "<base-path>/<chosen-context-dir>/llms/.env"
 chmod 600 "<base-path>/<chosen-context-dir>/llms/.env"
 ```
 
@@ -414,30 +484,20 @@ On Linux or WSL2 only: Claude Code and Codex as evaluation judges need the `bubb
 
 ## Step 8 - Credential store (`~/.claude/.env`)
 
-The Pack uses `~/.claude/.env` as the central place for API keys. The `notes-research` hook reads `ANTHROPIC_API_KEY` from this file. Other API keys can be added here too - the `list-env-keys.sh` helper lets Claude see their *names* (not values) when needed.
+`~/.claude/.env` is the optional central store for the user's own account-level keys: the ones that scripts and automations they add later need across workspaces. Nothing the Pack ships needs a key from it. The Quality Kit keeps its keys in `<context-dir>/llms/.env` (Step 7.5c), and a project's runtime keys go in that project's `.env`. The `list-env-keys.sh` helper lets Claude see the *names* of keys stored here (not values) when needed.
 
-If `~/.claude/.env` doesn't exist, create it with a starter template:
+If `~/.claude/.env` doesn't exist, create it from the starter template Step 4 copied into `~/.claude/templates/` (an existing file is left as it is):
 
 ```bash
-cat > ~/.claude/.env <<'EOF'
-# Claude Code credential store. Loaded by hooks. NEVER commit this file.
-# Format: KEY=value (no quotes needed for simple strings)
-
-# Required for the notes-research hook (cost: tokens per trigger)
-ANTHROPIC_API_KEY=
-
-# Optional - override the default research model (defaults to Haiku for cost)
-# ANTHROPIC_MODEL=claude-haiku-4-5-20251001
-
-# Add other API keys as you need them. Examples:
-# OPENAI_API_KEY=
-# GEMINI_API_KEY=
-# GITHUB_TOKEN=
-EOF
+[ -f ~/.claude/.env ] || cp ~/.claude/templates/claude-env.example ~/.claude/.env
 chmod 600 ~/.claude/.env
 ```
 
-Ask the user to add their `ANTHROPIC_API_KEY` value (or skip - auto-research will silently no-op until they add it).
+The template holds commented example key names only, no values.
+
+Claude never reads or echoes the values in this file, so the user fills in any key themselves. Tell them:
+
+> Do souboru `~/.claude/.env` si můžeš ukládat vlastní přístupové klíče, které budou potřebovat skripty a automatizace, co si časem přidáš. Pack sám z něj nic nepotřebuje, takže ho klidně nech prázdný. Až tam budeš klíč vkládat, otevři si soubor v editoru (na Macu třeba příkazem `open -e ~/.claude/.env`) a vlož ho sám. Do chatu mi ho neposílej, do hodnot v tomhle souboru se nedívám.
 
 Show how the env-keys helper works:
 
@@ -445,11 +505,11 @@ Show how the env-keys helper works:
 ~/.claude/scripts/list-env-keys.sh
 ```
 
-Their `ANTHROPIC_API_KEY` (and any other credentials they added) should appear by name. Values never appear in the output.
+Any credentials the user added appear by name. Values never appear in the output.
 
 ### The one readable env file - `.env.shared`
 
-`~/.claude/.env` above is the GLOBAL credential store for hooks; Claude never reads its values. The model has three tiers: the global `~/.claude/.env` and every project `.env` / `.env.local` / `.env.production` / `.env.*` are HARD - Claude never reads their values (`.env.local` is HARD on purpose; the JS ecosystem treats it as the live-secret file, so live keys land there). The single readable env file is **`.env.shared`** - the soft tier for low-risk values safe to surface (a notify webhook, a contact email). The deny rules plus the `bash-safety-extended.py` hook block reading every HARD `.env` / `.env.*` (via `cat`, `source`, redirection, `python -c`, docker bind-mount, or the Read tool). A real secret is never read by Claude - a program uses it without revealing the value. To see only the key NAMES of any HARD env file, Claude runs `~/.claude/scripts/list-env-keys.sh --from <path>` (add `--classify` for each key's state). Scope note: only commands that read the *values* into view are blocked (`cat`, `source`, redirection, `python -c ...read()`); passing the file as config (`--env-file`), copying a template, or mentioning it in text all pass, so deploys and setup are not blocked.
+`~/.claude/.env` above is the GLOBAL credential store for the user's account-level keys; Claude never reads its values. The model has three tiers: the global `~/.claude/.env` and every project `.env` / `.env.local` / `.env.production` / `.env.*` are HARD - Claude never reads their values (`.env.local` is HARD on purpose; the JS ecosystem treats it as the live-secret file, so live keys land there). The single readable env file is **`.env.shared`** - the soft tier for low-risk values safe to surface (a notify webhook, a contact email). The deny rules plus the `bash-safety-extended.py` hook block reading every HARD `.env` / `.env.*` (via `cat`, `source`, redirection, `python -c`, docker bind-mount, or the Read tool). A real secret is never read by Claude - a program uses it without revealing the value. To see only the key NAMES of any HARD env file, Claude runs `~/.claude/scripts/list-env-keys.sh --from <path>` (add `--classify` for each key's state). Scope note: only commands that read the *values* into view are blocked (`cat`, `source`, redirection, `python -c ...read()`); passing the file as config (`--env-file`), copying a template, or mentioning it in text all pass, so deploys and setup are not blocked.
 
 ---
 
@@ -483,26 +543,17 @@ Tell the user to **restart their Claude Code session** so the new `settings.json
 
 ---
 
-## Step 10 - Lock settings.json
+## Step 10 - Confirm the settings lock
 
-During this install session, Claude was able to freely edit `~/.claude/settings.json`. **At the end, lock it down.** Future sessions should prompt before any change to the kernel config:
+`settings.json` already ships `Edit(~/.claude/settings*)` in `permissions.ask`, so Claude asks the user before its Edit or Write tool changes `~/.claude/settings.json`. Confirm the rule survived the install (a hand-merged file from Step 4 could have dropped it):
 
 ```bash
-python3 -c "
-import json
-from pathlib import Path
-p = Path.home() / '.claude' / 'settings.json'
-s = json.load(open(p))
-ask = s.setdefault('permissions', {}).setdefault('ask', [])
-for rule in ['Edit(~/.claude/settings*)']:
-    if rule not in ask:
-        ask.append(rule)
-json.dump(s, open(p, 'w'), indent=2)
-print('settings.json locked: future edits to ~/.claude/settings* require user approval')
-"
+jq '(.permissions.ask // []) | any(. == "Edit(~/.claude/settings*)")' ~/.claude/settings.json
 ```
 
-After this step, Claude can still modify settings.json - but each modification requires the user to confirm.
+It should print `true`. If it prints `false`, the Step 4 merge lost the rule: put it back into `permissions.ask` with the user's approval.
+
+Tell the user plainly what the lock covers: it gates the Edit and Write tools only. A script run through Bash can still write the file, exactly as Steps 7a and 7.5a did with the user's approval of the plan, which is why the `respect-denies` rule forbids that route for any settings change the user has not approved.
 
 ---
 
@@ -516,7 +567,9 @@ Tell the user:
 > - Přečíst `docs/customization.md` - jak Pack rozšiřovat.
 > - Přečíst `docs/prompting-claude.md` - tipy na práci s Claude.
 >
-> Tento repo můžeš teď smazat - všechno je nainstalováno v `~/.claude/` a tvých workspace adresářích. Jestli sis nainstaloval i plugin (krok 7.5), běží dál z vlastní kopie; až bude jeho nová verze, naklonuješ si repo znovu a krok 7.5 zopakuješ.
+> Tento repo můžeš teď smazat - všechno je nainstalováno v `~/.claude/` a tvých workspace adresářích. Jestli sis nainstaloval i plugin (krok 7.5), nové verze stáhneš dvěma příkazy, `claude plugin marketplace update claude-code-pack-taste` a `claude plugin update taste-ai-quality-kit@claude-code-pack-taste`. Naklonované repo k tomu nepotřebuješ.
+
+If Step 7.5 used the local-folder fallback, drop the "smazat" advice instead: that plugin source reads from the clone, so the user keeps it and, for an update, runs `git pull` in it before the same two commands.
 
 The Warp recommendation is written Mac-first (Warp's original ecosystem). Warp also ships a Windows build, so if the user is on Windows, point them at the Windows download and adapt - do not present it as Mac-only.
 

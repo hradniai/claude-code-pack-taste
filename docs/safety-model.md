@@ -4,7 +4,7 @@ title: "Safety Model"
 status: approved
 summary: "What the starter pack protects against, what it doesn't, and where you'd reach for stronger guarantees."
 created: 2026-06-13 00:00
-updated: 2026-06-13 00:00
+updated: 2026-09-23 13:30
 owner: Šimon Hradní
 client: ~
 path: docs/safety-model.md
@@ -22,12 +22,13 @@ What the starter pack protects against, what it doesn't, and where you'd reach f
 ### Accidental destruction by Claude
 - `rm -r`, `rm -rf`, `rm -fr` (any recursive/forced delete) - denied at permission level
 - `mv -f` - denied (forced overwrite)
-- `git reset --hard`, `git push --force`, `git clean -f`, `git branch -D` - denied
+- `git reset --hard`, `git push --force`, `git clean -f`, `git branch -D` - denied, also when git options such as `-C <dir>`, `-c key=value` or `--git-dir` come before the subcommand, which a plain `git reset --hard*` rule does not match. The ask rules for `push`, `rebase` and `merge` cover the `-C <dir>` form only.
 - `git commit --no-verify`, `-n`, `-a` - denied (skip-hook escapes)
 - `sudo`, `chown`, `launchctl` - denied (privilege escalation)
 - `chmod -R`, `chmod 777`, `chmod 666`, `chmod +s` - denied (broad permissions)
-- `mkfs`, `dd if=/dev/...`, `fdisk` - denied (disk operations)
-- `pkill`, `killall`, `shutdown`, `reboot` - denied
+- `mkfs`, `dd if=/dev/...` - denied (disk operations); `fdisk` on a device - caught by the hook, not a permission rule
+- `pkill`, `shutdown`, `reboot` - denied
+- `killall` - asks first (in the `ask` list, not denied)
 - `npm publish`, `npm install -g` - denied
 - `eval`, `export` - denied (state mutation)
 
@@ -54,7 +55,7 @@ What the starter pack protects against, what it doesn't, and where you'd reach f
 - `~/.bashrc`, `~/.zshrc`, `~/.zprofile`, `~/.bash_profile` - denied (shell init)
 - `~/.ssh/` - denied
 - `**/.env*` - denied (Claude may read `.env.shared`, but never writes any env file)
-- `~/.claude/settings*` - denied (so Claude can't silently change its own config)
+- `~/.claude/settings*` - asks first (in the `ask` list, not denied), so Claude can't silently change its own config
 
 ### Environment files: the three-tier model
 Claude must never load secret VALUES into context, so commands that read a `.env` / `.env.*` file's contents into view are blocked - by deny rules and by `bash-safety-extended.py`, which intercepts the read/print vectors (`cat`/`head`/`grep`/`cut`/`source`/redirection/`python -c ...read()`) and the Read tool. Passing the file as config (`--env-file`, runners), copying from a template, or merely mentioning it does not expose values and stays allowed. Three tiers govern what Claude may read:

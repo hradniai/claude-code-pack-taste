@@ -4,7 +4,7 @@ title: "_CLIENTS"
 status: approved
 summary: "One subdirectory per client engagement."
 created: 2026-06-13 00:00
-updated: 2026-06-13 00:00
+updated: 2026-09-25 10:50
 owner: Šimon Hradní
 client: ~
 path: workspace/_CLIENTS/README.md
@@ -19,7 +19,7 @@ One subdirectory per client engagement.
 
 ## Don't run Claude from this directory
 
-Claude should be invoked from a specific client subfolder (e.g. `~/Documents/_CLIENTS/acme-corp/`), not from `_CLIENTS/` itself. Each client has its own AGENTS.md / CLAUDE.md, knowledge base, projects — context is per-client, not shared.
+Claude should be invoked from a specific client subfolder (e.g. `~/Documents/_CLIENTS/acme-corp/`), not from `_CLIENTS/` itself. Each client has its own AGENTS.md / CLAUDE.md, knowledge base, projects - context is per-client, not shared.
 
 If you start Claude here at the `_CLIENTS/` level, it has no specific client context and will likely produce generic output that doesn't match any of your engagements.
 
@@ -32,7 +32,7 @@ acme-corp/
 ├── AGENTS.md                 ← canonical: client name, engagement type, scope, contacts
 ├── CLAUDE.md                 ← symlink to AGENTS.md
 ├── README.md                 ← changelog, current state, status
-├── notes.md                  ← brain dump for this client (→ research auto-trigger)
+├── notes.md                  ← brain dump for this client
 ├── log.md                    ← audit log of automations
 ├── docs/
 │   ├── inbox/                ← drop documents here; Claude can ingest them into the KB when asked
@@ -54,16 +54,14 @@ acme-corp/
 
 Or use the `setup` skill: `cd ~/Documents/_CLIENTS/new-client/ && claude` then `/setup`.
 
-## What auto-processes happen
+## Notes and inbox (both manual)
 
-- **`notes.md` with `→ research` marker** → auto-research dispatched, output to `research/`.
+- **`notes.md`**: a plain file for ideas and impulses about this client. No hook reads it and nothing is sent anywhere; when a note deserves research, ask Claude for it.
 
-Requires `ANTHROPIC_API_KEY` in `~/.claude/.env`. Without it, the hook silently no-ops.
-
-The `docs/inbox/` and `docs/inbox/done/` directories exist as a manual workflow — drop a file in `inbox/`, ask Claude to summarize and ingest it into `knowledge-base/drafts/`, move the source to `inbox/done/`. Not an automated hook in this pack (the upstream starter pack has an `inbox-processor` hook if you want it; this pack omits it by default to keep per-edit API costs predictable).
+The `docs/inbox/` and `docs/inbox/done/` directories exist as a manual workflow - drop a file in `inbox/`, ask Claude to summarize and ingest it into `knowledge-base/drafts/`, move the source to `inbox/done/`. Not an automated hook in this pack (the upstream starter pack has an `inbox-processor` hook if you want it; this pack omits it by default to keep per-edit API costs predictable).
 
 ## What's NOT included
 
 - No `scripts/` per client. Client-specific scripts go in `projects/{project}/scripts/` or `~/.claude/scripts/` for personal tools.
-- No `.env` per client. Use `~/.claude/.env` (user-wide) and reference variable names in scripts via `~/.claude/scripts/list-env-keys.sh`.
-- No tool-specific configs (package.json, pyproject.toml, etc.) at the client level — those live inside individual projects.
+- No client keys in `~/.claude/.env`. Each client gets its own `.env` (schema in `.env.example`, created by `/setup`); `~/.claude/.env` holds only account-level keys. List key names without values via `~/.claude/scripts/list-env-keys.sh --from <path>`.
+- No tool-specific configs (package.json, pyproject.toml, etc.) at the client level - those live inside individual projects.

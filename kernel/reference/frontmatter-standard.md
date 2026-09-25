@@ -4,10 +4,10 @@ title: "Document frontmatter standard"
 status: approved
 summary: "The unified YAML frontmatter standard for every markdown artifact - an OKF-aligned superset with closed type buckets, a lifecycle status, and a predefined tag vocabulary, so an agent can orient from the frontmatter alone."
 created: 2026-06-16 16:59
-updated: 2026-06-16 16:59
+updated: 2026-09-23 13:30
 owner: Šimon Hradní
 client: taste
-path: ~/.claude/rules/frontmatter-standard.md
+path: ~/.claude/reference/frontmatter-standard.md
 tags: [methodology, standard, frontmatter, okf, documentation, claude-code]
 version: "1.0.0"
 release: latest
@@ -16,7 +16,7 @@ release: latest
 # Document frontmatter standard
 
 <purpose>
-One YAML frontmatter standard for every markdown artifact (decision docs, design artifacts, research, plans, notes, client work) plus, where the loader allows, Claude Code skills/agents/plugins and always-loaded system docs. The frontmatter exists so an AI agent loads ONLY the frontmatter and instantly knows what the file is, whether it is current, and what it does, then decides whether to read the body. This is an on-demand REFERENCE (read by tooling and skills when needed), deliberately NOT an always-loaded rule, so it does not cost context every session. A one-line pointer to it lives in `documentation-standard.md`.
+One YAML frontmatter standard for every markdown artifact (decision docs, design artifacts, research, plans, notes, client work) plus, where the loader allows, Claude Code skills/agents/plugins and always-loaded system docs. The frontmatter exists so an AI agent loads ONLY the frontmatter and instantly knows what the file is, whether it is current, and what it does, then decides whether to read the body. This is an on-demand REFERENCE (read by tooling and skills when needed), deliberately NOT an always-loaded rule, so it does not cost context every session: it lives in `~/.claude/reference/`, outside the auto-loaded `~/.claude/rules/` directory. A one-line pointer to it lives in `documentation-standard.md`.
 
 This standard is an opinionated SUPERSET of Google's Open Knowledge Format (OKF v0.1, https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md): it keeps the OKF-shaped core and adds governance fields OKF deliberately omits. Conformant outward, opinionated inward.
 </purpose>

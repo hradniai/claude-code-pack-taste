@@ -4,7 +4,7 @@ title: "Prompting Claude - Quick Reference"
 status: approved
 summary: "Claude Code uses Anthropic's Claude models (Opus / Sonnet / Haiku)."
 created: 2026-05-13 12:08
-updated: 2026-05-13 12:08
+updated: 2026-09-25 10:50
 owner: Šimon Hradní
 client: ~
 path: docs/prompting-claude.md
@@ -13,17 +13,17 @@ version: "1.0.0"
 release: latest
 ---
 
-# Prompting Claude — Quick Reference
+# Prompting Claude - Quick Reference
 
 Claude Code uses Anthropic's Claude models (Opus / Sonnet / Haiku). They have specific preferences that differ from OpenAI / Gemini / open-weight models. This guide covers what matters for daily Claude Code work.
 
-> Updated April 2026. Based on Anthropic's prompting documentation, Opus 4.7 release notes, and field experience. For deep model comparisons across vendors, see the linked Anthropic docs.
+> Model-specific details: see `_CONTEXT/llms/` (dated, user-maintained). This page covers prompting habits that do not depend on a model version, based on Anthropic's prompting documentation and field experience.
 
 ## The five things that matter most
 
 ### 1. Use XML tags for structure
 
-Claude is **trained** on XML tags — they're not just formatting, they're a parsing primitive. Tags are how Claude separates your instructions from your data.
+Claude is **trained** on XML tags - they're not just formatting, they're a parsing primitive. Tags are how Claude separates your instructions from your data.
 
 ```markdown
 <purpose>
@@ -44,7 +44,7 @@ Return ONLY valid JSON. No commentary.
 </output_format>
 ```
 
-Common tags: `<purpose>`, `<input>`, `<context>`, `<constraints>`, `<output_format>`, `<examples>`, `<example>`, `<system>`, `<task>`. Pick names that fit your use case — Claude generalizes from any sensible XML.
+Common tags: `<purpose>`, `<input>`, `<context>`, `<constraints>`, `<output_format>`, `<examples>`, `<example>`, `<system>`, `<task>`. Pick names that fit your use case - Claude generalizes from any sensible XML.
 
 ### 2. Lead with purpose, not role
 
@@ -76,7 +76,7 @@ Weak:
 
 Strong:
 ```markdown
-- Never fabricate data — output feeds a production database, fabricated values cause downstream errors that take hours to debug.
+- Never fabricate data - output feeds a production database, fabricated values cause downstream errors that take hours to debug.
 ```
 
 The "why" doesn't have to be long, but it has to be there. Claude treats constrained-without-reason as soft suggestions and constrained-with-reason as hard rules.
@@ -88,7 +88,7 @@ Long prompts have a middle that gets ignored. If a rule is critical, place it on
 ```markdown
 <critical>
 Never write to files outside the project root. This is enforced by sandboxing,
-but Claude should also self-enforce — agentic loops shouldn't rely solely on
+but Claude should also self-enforce - agentic loops shouldn't rely solely on
 guardrails.
 </critical>
 
@@ -118,14 +118,14 @@ Reply in 1–2 sentences. No filler.
 </output>
 ```
 
-Claude 4.7 is more concise by default than 4.5 / 4.6, but explicit instructions still help.
+Default verbosity shifts between model versions (see `_CONTEXT/llms/`), so explicit instructions still help.
 
 ## Things to avoid
 
 ### Don't add "think step by step"
-Extended thinking is built into Opus 4.7 and Sonnet 4.6 (adaptive). Manually prompting "think step by step" is redundant at best, harmful at worst — it can disrupt the adaptive thinking that's already happening.
+Current Opus and Sonnet models think adaptively (extended thinking is built in). Manually prompting "think step by step" is redundant at best, harmful at worst - it can disrupt the adaptive thinking that's already happening.
 
-If you want to control depth, use the API parameter `thinking.effort: "low|medium|high|xhigh"`. Don't paste reasoning instructions into the prompt body.
+If you want to control depth through the API, use `thinking: {type: "adaptive"}` + `output_config: {effort: "low|medium|high|xhigh|max"}`. Which levels a model accepts, and whether thinking is on by default, differs per model (see `_CONTEXT/llms/model-reference-prompting.md`). Don't paste reasoning instructions into the prompt body.
 
 ### Don't over-rely on few-shot examples
 Examples help on **format** (showing the exact output shape) but Claude is strong on instruction following without them. For most prompts, 0–2 well-chosen examples beat 5+ verbose ones. Each example burns tokens that could be better spent on constraints.
@@ -136,7 +136,7 @@ Phrases like:
 - "Provide interim status updates"
 - "Don't generalize"
 
-These were workarounds for older Claude versions. On 4.7 they cause **over-validation and verbosity** — Claude does these natively now. **Re-baseline old prompts** by removing this scaffolding when you migrate.
+These were workarounds for older Claude versions. On current Claude models they cause **over-validation and verbosity** - Claude does these natively now. **Re-baseline old prompts** by removing this scaffolding when you migrate.
 
 ### Don't manually structure as `Q: / A:` or `User: / Assistant:`
 Claude Code's harness handles message formatting. Inside your prompts, use XML tags instead of conversational scaffolding.
@@ -144,10 +144,10 @@ Claude Code's harness handles message formatting. Inside your prompts, use XML t
 ## Claude Code-specific patterns
 
 ### CLAUDE.md / AGENTS.md structure
-Use XML wrappers around major sections — `<purpose>`, `<persona>`, `<constraints>`, `<documentation>`. Keep total under ~5 KB per project (per ETH Zürich research, larger AGENTS.md files reduced task success).
+Use XML wrappers around major sections - `<purpose>`, `<persona>`, `<constraints>`, `<documentation>`. Keep total under ~5 KB per project (per ETH Zürich research, larger AGENTS.md files reduced task success).
 
 ### Skill descriptions
-Skills auto-trigger based on their `description` field in YAML frontmatter. Be specific and "pushy" — Claude under-triggers by default. Bad: `"PDF processing skill."` Good: `"Use this whenever the user wants to do anything with PDF files: reading, extracting, combining, splitting, rotating, watermarking, OCR, form filling..."`
+Skills auto-trigger based on their `description` field in YAML frontmatter. Be specific and "pushy" - Claude under-triggers by default. Bad: `"PDF processing skill."` Good: `"Use this whenever the user wants to do anything with PDF files: reading, extracting, combining, splitting, rotating, watermarking, OCR, form filling..."`
 
 ### Hooks and rules
 The starter pack ships rules in `~/.claude/rules/`. They auto-load every session as system context. Each rule should:
@@ -157,7 +157,7 @@ The starter pack ships rules in `~/.claude/rules/`. They auto-load every session
 - Stay under ~3 KB unless the topic genuinely needs more
 
 ### Subagent prompts
-Subagents do NOT inherit `CLAUDE.md` / `AGENTS.md` / rules. The dispatch prompt must include the context the subagent needs. Treat the dispatch as a brief for someone walking into the room cold — full context, explicit constraints, output format up front.
+Subagents load `CLAUDE.md` and rules like a session does (the built-in Explore and Plan agents skip them), but they never see the parent conversation. Task-specific decisions, file paths and conventions go into the dispatch prompt. Treat the dispatch as a brief for someone walking into the room cold - full context, explicit constraints, output format up front.
 
 ## When you're getting bad output
 
@@ -167,24 +167,25 @@ Diagnostic checklist (in order):
 3. **Are critical rules at the top AND bottom?** Move them.
 4. **Is the output format explicit?** Spell it out: "ONLY JSON", "1–2 sentences", etc.
 5. **Are you using XML tags?** If you're using free-form prose, switch to structured tags.
-6. **Are you over-prompting with old scaffolding?** Remove "double-check", "step by step", "interim updates" if running on 4.7.
+6. **Are you over-prompting with old scaffolding?** Remove "double-check", "step by step", "interim updates" on current models.
 
-If output is still bad after #1–6, the issue is likely your inputs or model choice — not your prompting.
+If output is still bad after #1–6, the issue is likely your inputs or model choice - not your prompting.
 
 ## Model selection within Claude Code
 
 | Need | Pick |
 |------|------|
-| Hardest reasoning, agentic coding | Opus 4.7 |
-| Default for everyday work, code, writing | Sonnet 4.6 |
-| High-volume, cost-sensitive, simple extractions | Haiku 4.5 |
-| Quick token-cheap reads (the auto-research hook) | Haiku 4.5 |
+| Hardest reasoning, agentic coding | `opus` alias |
+| Default for everyday work, code, writing | `sonnet` alias |
+| High-volume, cost-sensitive, simple extractions | `haiku` alias |
+
+The aliases follow the current model of each family; which versions those are, and how they differ, lives in `_CONTEXT/llms/model-lineup.md`.
 
 Switch in Claude Code via `/model` slash command or set default in `~/.claude/settings.json`.
 
 ## Where to learn more
 
-- Anthropic prompting docs: https://docs.claude.com/en/docs/build-with-claude/prompt-engineering
-- Claude Code best practices: https://docs.claude.com/en/docs/claude-code
-- Skills spec (cross-tool): https://github.com/anthropics/claude-code/blob/main/SKILLS.md
+- Anthropic prompting docs: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview
+- Claude Code best practices: https://code.claude.com/docs/en/best-practices
+- Claude Code skills: https://code.claude.com/docs/en/skills
 - AGENTS.md spec (cross-tool): https://agents.md

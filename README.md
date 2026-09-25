@@ -4,7 +4,7 @@ title: "Claude Code Pack - Taste edition"
 status: approved
 summary: "Baseline Claude Code configuration tuned for an agency power-user cohort: ambassadors and technically curious marketers who write Python scripts, build small apps with Claude Code, and do knowledge wo"
 created: 2026-06-13 21:07
-updated: 2026-06-13 21:07
+updated: 2026-09-25 10:50
 owner: Šimon Hradní
 client: ~
 path: README.md
@@ -30,16 +30,14 @@ Pokud je tvoje zkušenost s AI claude.ai a nic víc - začni krátkým [**`UZIVA
 ### Kernel (`~/.claude/`)
 - **Restrictive `settings.json`** - destructive bash patterns, sensitive file reads, browser cookie/history dirs, and `--no-verify` style escapes are denied at the global level. Bypass mode is locked off.
 - **Bash safety hook** - catches two-step download-execute, subshell bypasses, a recursive `rm` hidden in a chained command, a `mv` that would silently overwrite an existing file, secret-file reads (every `.env` / `.env.*` except the readable `.env.shared` soft tier and non-secret templates, via bash or the Read tool), browser data extraction, and `python -c` bypasses.
-- **Context-bloat guard** - soft brake on `Read` of files larger than ~50k tokens. Forces Claude to either chunk the read or ask the user to confirm. Prevents the "Claude loaded an 80MB CSV and now the session is dead" scenario.
-- **Auto-research hook** - detects unmarked notes in `notes.md`, dispatches background research via the Anthropic API, marks each as ✅ (research done) or ⏭️ (skipped).
 - **Time-injection hook** - adds the current local time to Claude's context every prompt.
 - **Statusline** - three-line live status (model · throughput · cost / project · branch · context / 5-hour and 7-day rate-limit usage). Lets you see when you're burning through your team-plan allotment.
-- **Six rules** - documentation standard (incl. frontmatter standard pointer), respect-denies behavior (updated three-tier env model), subagent usage guide, notes convention, language (which language to use, plus native-Czech style: banned AI calques, typography), frontmatter standard.
+- **Four rules** - documentation standard (incl. frontmatter standard pointer), respect-denies behavior (updated three-tier env model), subagent usage guide, language (which language to use, plus native-Czech style: banned AI calques, typography). The frontmatter standard itself ships as an on-demand reference in `~/.claude/reference/`, not as an auto-loaded rule.
 - **Six skills** - `setup` (project scaffolding, with template-based gitignore/env schema and local git autosave), `skill-creator`, `prd-creator`, `dr-prompt`, `client-data-check` (PII scanner for files before they leave the machine), `idea-file-creator` (capture an idea as a self-contained, leak-free idea file for handoff or later).
 - **One kernel agent** - `research-analyst` for focused single-topic lookups with a sourced verdict inline.
 - **Taste AI Quality Kit plugin** - optional bundle installed from this repository's plugin source, not copied into `~/.claude/`. It covers prompt engineering, a prompt hygiene check, live prompt evaluation the plugin runs for you, and a read-only admission review of someone else's skill. It reads the `llms/` context you maintain yourself, never a bundled model cheat sheet.
 - **Helper scripts** - `list-env-keys.sh` exposes *names* of credential env vars without ever revealing values; `env-key-classify.py` adds value-state classification (empty/placeholder/filled+kind); `git-autosave.sh` local-only git safety net for any work folder.
-- **Ignore + env templates** - `gitignore`, `claudeignore`, and per-workspace-type `.env.example` schemas (`klient`, `dev`, `app`, `general`) plus `.env.shared` skeleton. The `setup` skill copies these automatically.
+- **Ignore + env templates** - `gitignore` and per-workspace-type `.env.example` schemas (`klient`, `dev`, `app`, `general`) plus `.env.shared` skeleton. The `setup` skill copies these automatically. Claude Code has no ignore file of its own; the pack keeps files away from Claude with `permissions.deny` Read rules instead.
 
 ### Workspace (chosen path, default `~/Documents/`)
 - `_CONTEXT/` - personal profile, notes, best-practices, and mandatory user-maintained `llms/` context for agent work.
@@ -49,16 +47,23 @@ Pokud je tvoje zkušenost s AI claude.ai a nic víc - začni krátkým [**`UZIVA
 
 ### Taste AI Quality Kit
 
-Prompt engineering, prompt evaluation and external skill admission are one optional plugin. It is installed during the walkthrough from the plugin source this repository declares:
+Prompt engineering, prompt evaluation and external skill admission are one optional plugin. It is installed during the walkthrough from the plugin marketplace this repository declares on GitHub:
 
 ```bash
-claude plugin marketplace add <path to your clone of this repo>
+claude plugin marketplace add hradniai/claude-code-pack-taste
 claude plugin install taste-ai-quality-kit@claude-code-pack-taste
+```
+
+To update it later:
+
+```bash
+claude plugin marketplace update claude-code-pack-taste
+claude plugin update taste-ai-quality-kit@claude-code-pack-taste
 ```
 
 The plugin holds the workflow, the safety checks and the scanner. The model knowledge stays with you, in `_CONTEXT/llms/`: which models you use, how each of them is prompted, what you decided locally, plus your own access keys and any example sets. That split is deliberate - model facts go stale faster than any package, so keeping them yours is the practice this plugin is built around. The plugin never writes, fills or replaces those files.
 
-The pack ships only the empty skeleton, which reports `CONTEXT_NOT_READY` until you fill it in. You can ask Claude Code to help you research and draft it; the files stay yours either way.
+The three record files ship empty and report `CONTEXT_NOT_READY` until you fill them in; four dated reference documents (`model-lineup.md`, `model-reference-prompting.md`, `ai-prompt-guidelines.md`, `codex-cli-reference.md`) ship next to them as a starting point. The plugin reads only your three records. You can ask Claude Code to help you research and draft them; the files stay yours either way.
 
 You choose where these live during install - no `~/Documents/` lock-in.
 
@@ -70,7 +75,7 @@ Every project root has both `AGENTS.md` (canonical, cross-tool standard) and `CL
 You don't run an install script. You let Claude walk you through it.
 
 ```bash
-git clone https://github.com/<your-org>/claude-code-pack-taste.git ~/Downloads/claude-code-pack-taste
+git clone https://github.com/hradniai/claude-code-pack-taste.git ~/Downloads/claude-code-pack-taste
 cd ~/Downloads/claude-code-pack-taste
 claude
 ```
@@ -106,12 +111,16 @@ What changed in this fork:
 - **`language.md` rule added** - single authority for which language to use (English for system files, Czech for chat and deliverables) plus native-Czech style that blocks AI calques.
 - **`client-data-check` skill added** - offline PII scanner.
 - **`inbox-processor.sh` hook removed** - per-edit API calls were nudging team-plan usage; teams can re-enable it from the upstream if they want.
+- **`notes-research.sh` hook and `notes-convention.md` rule removed** - the hook never worked on a fresh install, and making it work would send note text to the Anthropic API at a cost per entry. `notes.md` stays a plain file for ideas, with no automation.
+- **`context-bloat-guard.py` hook removed** - Claude Code's Read tool now caps large text files itself (a partial view instead of a dead session) and resizes large images, while the guard judged files by byte size and so blocked any screenshot over roughly 200 KB and any PDF above that size, even a read of a few pages.
+- **Risky-git deny rules survive git options** - a rule like `git reset --hard*` does not match `git -C <dir> reset --hard` (or `-c`, `--git-dir`), so every risky-git deny rule now has a `git * ...` twin, force pushes that end in `-f` are caught, and the git ask rules have a `git -C *` twin. The four pipe-to-shell deny rules are gone: Claude Code matches rules per subcommand, so a rule containing a pipe never matched; the Bash safety hook blocks those commands.
+- **`list-env-keys.sh` no longer leaks multi-line values** - it lists process variables with `compgen -e` instead of `env | cut`, which passed a PEM key's continuation lines through.
 - **`_CLIENTS/taste/` scaffold included** - pre-built example client workspace.
 - **INSTRUCTIONS.md interactive interview rewritten** - explicit workspace-path prompt (no `~/Documents/` assumption), OS-specific dependency setup, conflict checks before any overwrite.
-- **Frontmatter standard added** (`rules/frontmatter-standard.md`) - unified OKF-aligned YAML frontmatter for every markdown artifact, closed type buckets, predefined tag vocabulary.
+- **Frontmatter standard added** (`reference/frontmatter-standard.md`, an on-demand reference, not an auto-loaded rule) - unified OKF-aligned YAML frontmatter for every markdown artifact, closed type buckets, predefined tag vocabulary.
 - **One kernel agent added** - `research-analyst` with source-citing constraints. Prompt engineering moved out of the kernel into the optional `taste-ai-quality-kit` plugin (see above), so no global agent carries stale model advice.
 - **`env-key-classify.py` + `git-autosave.sh` added** - env value-state classifier (names+kind only, never values); local-only git time machine for any work folder.
-- **Ignore + env templates added** - `gitignore`, `claudeignore`, and per-type `.env.example` + `.env.shared` schemas; `setup` skill copies them automatically.
+- **Ignore + env templates added** - `gitignore` and per-type `.env.example` + `.env.shared` schemas; `setup` skill copies them automatically.
 - **Env model updated** - three-tier model (global `~/.claude/.env` HARD / project `.env*` HARD / `.env.shared` SOFT) replaces the old `.env.local`-as-readable exception. `respect-denies.md`, `setup` skill, `INSTRUCTIONS.md`, `UZIVATELSKY-MANUAL.md`, and `docs/safety-model.md` document this consistently.
 - **`idea-file-creator` skill added** - capture a thought as a self-contained, leak-free, machine-readable idea file (an ADR for ideas) for handoff or parking for later.
 - **Permission lists tuned** - `allow` widened to cover safe day-to-day commands (read-only inspection, build tools, media tooling like `ffmpeg`/`magick`, broad `git`, `docker`/`ssh`) so they do not nag; install-class (`npm install`, `pip install`, `brew`), network-reaching (`scp`/`rsync`), and `git push`/`rebase`/`merge` stay in `ask`; destructive forms stay denied. Two `bash-safety-extended.py` guards added: recursive-rm in a chained command, and a mv that would overwrite an existing file.

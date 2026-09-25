@@ -1,26 +1,28 @@
 #!/usr/bin/env bash
-# transcribe.sh — STUB
+# transcribe.sh - STUB
 #
 # Convert a local audio/video file into a markdown transcript.
 #
 # This is the entry point for the transcribe example app. The actual API
-# call is NOT YET IMPLEMENTED — you need to fill in the model invocation
+# call is NOT YET IMPLEMENTED - you need to fill in the model invocation
 # below for your chosen provider.
 #
 # Recommended providers:
 #   - Google Gemini (multimodal, supports audio input directly)
-#   - OpenAI Whisper API (audio-only)
+#   - OpenAI transcription API (gpt-transcribe; audio-only)
 #   - Local whisper.cpp (no API cost, requires install)
 #
-# Configuration: API keys in ~/.claude/.env
+# Configuration: API keys in this app's own .env next to this script
+# (schema: ~/.claude/templates/app-env.example)
 #
 # Usage:
 #   transcribe.sh <input-file> [--language LANG]
 
 set -euo pipefail
 
-# --- Source credentials ---
-[ -f "$HOME/.claude/.env" ] && { set -a; . "$HOME/.claude/.env"; set +a; }
+# --- Source credentials from this app's own .env ---
+ENV_FILE="$(dirname "$0")/.env"
+[ -f "$ENV_FILE" ] && { set -a; . "$ENV_FILE"; set +a; }
 
 # --- Parse arguments ---
 INPUT="${1:?Usage: transcribe.sh <input-file> [--language LANG]}"
@@ -59,15 +61,14 @@ echo ""
 #      "Transcribe this audio. Output as markdown with speaker labels if
 #       distinguishable. Add timestamps every 30 seconds."
 #
-# OpenAI Whisper API:
+# OpenAI transcription API (gpt-transcribe; whisper-1 is legacy):
 #   curl https://api.openai.com/v1/audio/transcriptions \
 #     -H "Authorization: Bearer $OPENAI_API_KEY" \
 #     -F file="@$INPUT" \
-#     -F model="whisper-1" \
-#     -F response_format="text"
+#     -F model="gpt-transcribe" | jq -r .text
 #
 # Local whisper.cpp:
-#   ./main -m models/ggml-large-v3.bin -f "$INPUT" -otxt
+#   ./build/bin/whisper-cli -m models/ggml-large-v3.bin -f "$INPUT" -otxt
 # ============================================================================
 
 echo "ERROR: This is a stub. Implement the API call in $0 to make it work." >&2

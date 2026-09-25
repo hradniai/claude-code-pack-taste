@@ -4,7 +4,7 @@ title: "Best Practices"
 status: approved
 summary: "One markdown file per topic. Capture *your* approach to recurring problems - distinct from generic online best practice."
 created: 2026-05-13 12:08
-updated: 2026-05-13 12:08
+updated: 2026-09-23 13:30
 owner: Šimon Hradní
 client: ~
 path: workspace/_CONTEXT/best-practices/README.md
@@ -15,11 +15,11 @@ release: latest
 
 # Best Practices
 
-> One markdown file per topic. Capture *your* approach to recurring problems — distinct from generic online best practice.
+> One markdown file per topic. Capture *your* approach to recurring problems - distinct from generic online best practice.
 
 ## Why
 
-Online best practices are generic. They work for the median case, often poorly for yours. As you develop opinions about how *you* want to handle recurring topics (project setup, client onboarding, AI strategy, code review, whatever), capture them here. Over time, this folder becomes the primary source for "how I think about X" — replacing online lookups for those topics.
+Online best practices are generic. They work for the median case, often poorly for yours. As you develop opinions about how *you* want to handle recurring topics (project setup, client onboarding, AI strategy, code review, whatever), capture them here. Over time, this folder becomes the primary source for "how I think about X" - replacing online lookups for those topics.
 
 ## When to add
 
@@ -61,7 +61,7 @@ Guidance for future use. Include rationale.
 | YYYY-MM-DD | What was added or restructured | Conversation/project context | What was removed |
 ```
 
-The change log preserves history when main content is overwritten — nothing silently lost.
+The change log preserves history when main content is overwritten - nothing silently lost.
 
 ## Length
 

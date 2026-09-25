@@ -4,7 +4,7 @@ title: "_APPS"
 status: approved
 summary: "Small apps and tools you build."
 created: 2026-05-13 12:08
-updated: 2026-05-13 12:08
+updated: 2026-09-23 13:30
 owner: Šimon Hradní
 client: ~
 path: workspace/_APPS/README.md
@@ -33,16 +33,16 @@ _APPS/
 
 ## When to put something here vs. somewhere else
 
-- **`_APPS/`** — reusable tools you'll run more than once. CLI scripts, mini web apps, MCP servers, file converters.
-- **`_BUSINESS/scripts/`** — small one-off utilities for your own workflow. Not packaged, not shared.
-- **`_CLIENTS/{client}/projects/{project}/`** — code that's part of a client deliverable.
-- **`~/.claude/scripts/`** — system-level utilities used across projects (like `list-env-keys.sh`).
+- **`_APPS/`** - reusable tools you'll run more than once. CLI scripts, mini web apps, MCP servers, file converters.
+- **`_BUSINESS/scripts/`** - small one-off utilities for your own workflow. Not packaged, not shared.
+- **`_CLIENTS/{client}/projects/{project}/`** - code that's part of a client deliverable.
+- **`~/.claude/scripts/`** - system-level utilities used across projects (like `list-env-keys.sh`).
 
 ## Bundled example: `_example-app-transcribe/`
 
-A minimal stub showing the structure for a transcription tool that uses an LLM API. **It's a stub — you'll need to implement the actual API call before it does anything useful.** Read its README for what to build out.
+A minimal stub showing the structure for a transcription tool that uses an LLM API. **It's a stub - you'll need to implement the actual API call before it does anything useful.** Read its README for what to build out.
 
-If you don't want it, delete the directory:
+If you don't want it, move it aside (the pack denies recursive deletes; remove the backup yourself later if you like):
 ```bash
-rm -rf _APPS/_example-app-transcribe
+mv _APPS/_example-app-transcribe _APPS/_example-app-transcribe.bak-$(date +%Y%m%d)
 ```

@@ -4,7 +4,7 @@ title: "Notes - {{CLIENT_NAME}}"
 status: approved
 summary: "Brain dump for this client."
 created: 2026-05-13 12:08
-updated: 2026-05-13 12:08
+updated: 2026-09-25 10:50
 owner: Šimon Hradní
 client: ~
 path: workspace/_CLIENTS/_example-client/notes.md
@@ -13,8 +13,8 @@ version: "1.0.0"
 release: latest
 ---
 
-# Notes — {{CLIENT_NAME}}
+# Notes - {{CLIENT_NAME}}
 
-Brain dump for this client. Add `→ research` to dispatch auto-research.
+Brain dump for ideas and impulses about this client. A plain file: nothing reads it automatically and nothing is sent anywhere.
 
 ---

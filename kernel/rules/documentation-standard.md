@@ -4,7 +4,7 @@ title: "documentation-standard"
 status: approved
 summary: "Documentation standard defining XML/Markdown format, file structure (AGENTS.md, WORKSTATE.md, README.md), and mandatory rules for project tracking."
 created: 2026-06-13 21:07
-updated: 2026-06-13 21:07
+updated: 2026-09-23 13:30
 owner: Šimon Hradní
 client: ~
 path: kernel/rules/documentation-standard.md
@@ -44,7 +44,7 @@ Autocompact will destroy context. Documentation is the only defense.
 
 ## Frontmatter (every markdown document)
 
-Every markdown artifact carries a small YAML frontmatter core (`type`, `status`, `summary`, `created`, `updated`, `created_by`, `client`, `path`, `tags`) so an agent orients from the frontmatter alone without reading the body. `type` is one of 7 CLOSED buckets (core / strategy / product_design / research / devops / context / notes); the fine kind, technology, and topic live in `tags`. The full standard (bucket definitions, the predefined tag vocabulary, per-loader rules for skills/agents/plugins/system docs, OKF alignment) lives in `~/.claude/rules/frontmatter-standard.md` - a reference, not auto-loaded; skills read it on demand. An OKF-conformant superset (Google Open Knowledge Format). Kept there, not inline, so this rule does not bloat.
+Every markdown artifact carries a small YAML frontmatter core (`type`, `status`, `summary`, `created`, `updated`, `created_by`, `client`, `path`, `tags`) so an agent orients from the frontmatter alone without reading the body. `type` is one of 7 CLOSED buckets (core / strategy / product_design / research / devops / context / notes); the fine kind, technology, and topic live in `tags`. The full standard (bucket definitions, the predefined tag vocabulary, per-loader rules for skills/agents/plugins/system docs, OKF alignment) lives in `~/.claude/reference/frontmatter-standard.md` - a reference, not auto-loaded; skills read it on demand. An OKF-conformant superset (Google Open Knowledge Format). Kept there, not inline, so this rule does not bloat.
 
 ## Language
 Language routing (which language to use) and native-Czech quality (how to write Czech output well) are owned by `language.md`. This file no longer governs language.

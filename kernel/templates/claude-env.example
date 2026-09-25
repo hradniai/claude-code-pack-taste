@@ -1,0 +1,12 @@
+# Claude Code credential store for your own account-level keys. NEVER commit this file.
+# Format: KEY=value (no quotes needed for simple strings)
+
+# Optional: nothing the pack ships needs a key from this file. Keep keys here for
+# scripts and automations of your own. A project's runtime keys go in that
+# project's .env; the Quality Kit plugin keeps its keys in <context-dir>/llms/.env.
+
+# Add API keys as you need them. Examples:
+# ANTHROPIC_API_KEY=
+# OPENAI_API_KEY=
+# GEMINI_API_KEY=
+# GITHUB_TOKEN=

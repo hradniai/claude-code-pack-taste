@@ -4,7 +4,7 @@ title: "Rules"
 status: approved
 summary: "Files in this directory are auto-loaded into every Claude Code session as system context."
 created: 2026-06-13 21:07
-updated: 2026-06-13 21:07
+updated: 2026-09-25 10:50
 owner: Šimon Hradní
 client: ~
 path: kernel/rules/README.md
@@ -19,14 +19,16 @@ Files in this directory are auto-loaded into every Claude Code session as system
 
 ## What's bundled
 
+Four rules ship here:
+
 | File | Purpose |
 |------|---------|
 | `documentation-standard.md` | XML+Markdown format conventions; AGENTS.md/CLAUDE.md/README/WORKSTATE rules |
-| `frontmatter-standard.md` | Unified YAML frontmatter for every markdown artifact - closed type buckets, predefined tags |
 | `respect-denies.md` | Behavior when permission engine blocks a command - never bypass, inform user |
 | `subagent-rules.md` | When to use subagents, which type to pick, inheritance limits, dispatch quality |
-| `notes-convention.md` | `notes.md` format and the `→ research` auto-trigger |
 | `language.md` | Which language to use (English by default for system files; Czech for chat and deliverables) and how to write native Czech. Banned AI calques, typography, style rules. |
+
+The frontmatter standard (unified YAML frontmatter for every markdown artifact - closed type buckets, predefined tags) is not a rule: it lives in `~/.claude/reference/frontmatter-standard.md` and is read on demand, so it does not cost context in every session.
 
 ## Adding your own rules
 
@@ -43,8 +45,7 @@ Conventions for new rules:
 Delete the file. Rules are loose-coupled - removing one doesn't break the others. Be aware:
 - Removing `respect-denies.md` may make Claude attempt to bypass denies with clever workarounds
 - Removing `documentation-standard.md` may regress doc quality and lose AGENTS.md/CLAUDE.md convention
-- Removing `subagent-rules.md` may cause subagent dispatch failures (especially MCP-related)
-- Removing `notes-convention.md` will disable the `→ research` auto-trigger workflow
+- Removing `subagent-rules.md` may regress subagent dispatch (thin briefs, raw research results in the main context)
 - Removing `language.md` loses language routing (Claude may write system files in Czech) and lets Czech output drift toward translated-English style
 
 ## Custom rules vs. project-level

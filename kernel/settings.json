@@ -83,7 +83,6 @@
       "WebFetch",
       "WebSearch",
       "Agent",
-      "Task*",
       "Skill(*)",
       "ListMcpResourcesTool",
       "ReadMcpResourceTool"
@@ -109,14 +108,11 @@
       "Bash(eval *)",
       "Bash(launchctl *)",
       "Bash(export *)",
-      "Bash(curl * | bash*)",
-      "Bash(curl * | sh*)",
-      "Bash(wget * | bash*)",
-      "Bash(wget * | sh*)",
       "Bash(git push --force*)",
       "Bash(git push *--force*)",
       "Bash(git push -f*)",
       "Bash(git push *-f *)",
+      "Bash(git push *-f)",
       "Bash(git reset --hard*)",
       "Bash(git checkout -- *)",
       "Bash(git clean -f*)",
@@ -125,6 +121,25 @@
       "Bash(git commit --no-verify*)",
       "Bash(git commit -n *)",
       "Bash(git commit -a*)",
+      "Bash(git commit * -a)",
+      "Bash(git commit --all*)",
+      "Bash(git commit * --all)",
+      "Bash(git * push *--force*)",
+      "Bash(git * push -f*)",
+      "Bash(git * push *-f *)",
+      "Bash(git * push *-f)",
+      "Bash(git * reset --hard*)",
+      "Bash(git * checkout -- *)",
+      "Bash(git * clean -f*)",
+      "Bash(git * clean -d*)",
+      "Bash(git * branch -D*)",
+      "Bash(git * commit --no-verify*)",
+      "Bash(git * commit -n *)",
+      "Bash(git * commit -n)",
+      "Bash(git * commit -a*)",
+      "Bash(git * commit * -a)",
+      "Bash(git * commit --all*)",
+      "Bash(git * commit * --all)",
       "Bash(npm publish*)",
       "Bash(npm install --global*)",
       "Bash(npm install -g*)",
@@ -191,7 +206,10 @@
       "Bash(rsync*)",
       "Bash(git push*)",
       "Bash(git rebase*)",
-      "Bash(git merge*)"
+      "Bash(git merge*)",
+      "Bash(git -C * push*)",
+      "Bash(git -C * rebase*)",
+      "Bash(git -C * merge*)"
     ],
     "disableBypassPermissionsMode": "disable"
   },
@@ -211,23 +229,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/context-bloat-guard.py"
-          },
-          {
-            "type": "command",
             "command": "~/.claude/hooks/bash-safety-extended.py"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/notes-research.sh",
-            "async": true
           }
         ]
       }
@@ -252,10 +254,10 @@
     "DISABLE_ERROR_REPORTING": "1",
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   },
-  "alwaysThinkingEnabled": true,
-  "_comment_teams": "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS in env above unlocks the 'teammates' multi-agent feature (off by default in Claude Code). It only makes the capability available; summoning a team is always a deliberate, manual action, so it costs nothing on its own.",
+  "_comment_telemetry": "DISABLE_TELEMETRY is a deliberate privacy choice, and it costs features: it also stops Claude Code from fetching feature flags, so Remote Control, native reading of AGENTS.md (the pack ships a CLAUDE.md beside every AGENTS.md for this reason), syncing skills and plugins enabled on claude.ai, /skill-doctor and the advisor tool are unavailable. Any non-empty value, even 0 or false, keeps telemetry off; delete the line to turn it back on.",
+  "_comment_teams": "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS in env above unlocks the 'teammates' multi-agent feature (off by default in Claude Code). It is not free: while it is on, any subagent Claude gives a name launches as a teammate, so teams can form during ordinary delegation nobody framed as team work, and every teammate is a separate session with its own context window, which uses significantly more of the plan's usage. Delete the line to make named subagents plain subagents again.",
   "_comment_trust": "The 'Do you trust the files in this folder?' dialog CANNOT be turned off here - no settings.json key or safe env var exists for it, and bypass mode (which would skip it) is deliberately locked off. To pre-trust your working directories without weakening the safety baseline, run scripts/trust-workspace.sh (it merges per-directory trust flags into ~/.claude.json). See INSTRUCTIONS.md.",
   "feedbackSurveyRate": 0,
-  "_comment_cleanup": "cleanupPeriodDays controls how long Claude Code keeps local conversation transcripts before deleting them. 3650 = 10 years of retention. Never set this to 0: a known bug makes 0 disable transcript persistence entirely instead of disabling cleanup.",
+  "_comment_cleanup": "cleanupPeriodDays controls how long Claude Code keeps local conversation transcripts before deleting them. 3650 = 10 years of retention. The minimum is 1: Claude Code rejects 0 as invalid, and a value that fails validation voids this whole file, deny rules included, so there is no 'never delete' value, only a very large one.",
   "cleanupPeriodDays": 3650
 }

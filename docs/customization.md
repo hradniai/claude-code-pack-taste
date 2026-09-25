@@ -4,7 +4,7 @@ title: "Customization"
 status: approved
 summary: "How to extend, modify, or replace pieces of the starter pack to fit your work."
 created: 2026-05-13 12:08
-updated: 2026-05-13 12:08
+updated: 2026-09-25 10:50
 owner: Šimon Hradní
 client: ~
 path: docs/customization.md
@@ -19,9 +19,11 @@ How to extend, modify, or replace pieces of the starter pack to fit your work.
 
 ## What you'll customize first
 
-1. **`~/Documents/_CONTEXT/user-profile.md`** — fill in who you are. Claude reads this every session. Single biggest leverage on output quality.
-2. **`~/.claude/.env`** — add `ANTHROPIC_API_KEY` to enable auto-research and inbox-processing. Add other API keys (OpenAI, Gemini, GitHub, etc.) as needed.
-3. **`~/Documents/_CLIENTS/_example-client/`** — rename to a real client when you onboard one, or delete if you don't have clients yet.
+Paths below use the default workspace root `~/Documents/` and the default folder names; if you chose others during install, read them as your own.
+
+1. **`~/Documents/_CONTEXT/user-profile.md`** - fill in who you are. The install imports it from `~/.claude/AGENTS.md` (an `@` import line), so sessions load it; if you move the file, update that line. Single biggest leverage on output quality.
+2. **`~/.claude/.env`** - optional central store for account-level keys of automations you add yourself; nothing the pack ships needs a key from it. A project's own runtime keys go in that project's `.env`, and the Quality Kit plugin keeps its keys in `_CONTEXT/llms/.env`.
+3. **`~/Documents/_CLIENTS/_example-client/`** - rename to a real client when you onboard one, or delete if you don't have clients yet.
 
 ## What you'll customize over time
 
@@ -36,11 +38,11 @@ Convention:
 - Test by starting a new session and asking Claude about it
 
 Common rules people add:
-- `tech-stack.md` — locked technology choices for your standard projects
-- `code-style.md` — formatting, naming, comment conventions
-- `client-communication.md` — how to write client-facing emails, proposals
-- `output-language.md` — language preferences (e.g. "Czech for client docs, English for code comments")
-- `decision-philosophy.md` — your principles for evaluating tools and approaches
+- `tech-stack.md` - locked technology choices for your standard projects
+- `code-style.md` - formatting, naming, comment conventions
+- `client-communication.md` - how to write client-facing emails, proposals
+- `output-language.md` - language preferences (e.g. "Czech for client docs, English for code comments")
+- `decision-philosophy.md` - your principles for evaluating tools and approaches
 
 ### Adding skills
 
@@ -51,10 +53,10 @@ Skills go in `~/.claude/skills/{skill-name}/SKILL.md`. They're auto-discovered.
 ### Adding hooks
 
 Hooks are configured in `~/.claude/settings.json` under `hooks.{event}` arrays. Events:
-- `PreToolUse` — before any tool call (matcher: tool name)
-- `PostToolUse` — after any tool call (matcher: tool name)
-- `UserPromptSubmit` — when user sends a message
-- `SessionStart`, `SessionEnd`, `Stop` — session lifecycle
+- `PreToolUse` - before any tool call (matcher: tool name)
+- `PostToolUse` - after any tool call (matcher: tool name)
+- `UserPromptSubmit` - when user sends a message
+- `SessionStart`, `SessionEnd`, `Stop` - session lifecycle
 
 Hook scripts go in `~/.claude/hooks/`. Make them executable (`chmod +x`).
 
@@ -88,14 +90,14 @@ The starter pack puts `Edit(~/.claude/settings*)` in `ask` so Claude can't silen
 The starter pack as-shipped. Single user, single machine. `~/.claude/` is your kingdom.
 
 ### Small team
-Each team member installs the starter pack independently. Drift is OK — diverging configs reflect personal preferences. Share new rules / skills via:
+Each team member installs the starter pack independently. Drift is OK - diverging configs reflect personal preferences. Share new rules / skills via:
 - Personal git repos (each member pulls into their `~/.claude/`)
 - A team-shared starter pack fork with team conventions baked in
 
 ### Larger team / managed environment
 Use endpoint-managed settings (`/Library/Application Support/ClaudeCode/managed-settings.json` on macOS) to enforce uncircumventable policy across all team members. Combine with `allowManagedPermissionRulesOnly: true` to lock out user-defined permission rules.
 
-The starter pack is fine to use alongside managed settings — managed settings supersede on conflict.
+The starter pack is fine to use alongside managed settings - managed settings supersede on conflict.
 
 ### Enterprise
 Server-managed settings (Teams/Enterprise Claude.ai plan) push policy from the admin console. The starter pack becomes a personal layer on top of organization-mandated baselines.
@@ -108,15 +110,13 @@ Modular, not monolithic. To remove pieces:
 |-------------|--------|
 | `~/.claude/skills/dr-prompt/` | `/dr-prompt` slash command unavailable |
 | `~/.claude/skills/prd-creator/` | `/prd-creator` unavailable |
-| `~/.claude/hooks/notes-research.sh` (and remove from settings.json) | `→ research` markers in notes.md become inert text |
-| `~/.claude/hooks/inbox-processor.sh` (and remove from settings.json) | Files in `docs/inbox/` no longer auto-process |
 | `~/Documents/_CLIENTS/_example-client/` | Example template gone (you'll create real clients yourself) |
 | `~/Documents/_APPS/_example-app-transcribe/` | Stub app gone |
 
 Don't remove:
-- `~/.claude/rules/respect-denies.md` — this is what stops Claude from bypassing your safety boundaries
-- `~/.claude/hooks/bash-safety-extended.py` — the only catch for two-step bypass patterns
-- `~/.claude/settings.json` deny rules — your safety net
+- `~/.claude/rules/respect-denies.md` - this is what stops Claude from bypassing your safety boundaries
+- `~/.claude/hooks/bash-safety-extended.py` - the only catch for two-step bypass patterns
+- `~/.claude/settings.json` deny rules - your safety net
 
 ## Updating the starter pack itself
 
@@ -127,4 +127,4 @@ The starter pack does not auto-update. There's no version bump mechanism for ins
 
 This is intentional. Auto-update on settings.json risks blowing away customizations you've made.
 
-If you want centrally-managed configs that update automatically across machines, you've outgrown a starter pack — you need endpoint-managed or server-managed settings (see "Scaling" above).
+If you want centrally-managed configs that update automatically across machines, you've outgrown a starter pack - you need endpoint-managed or server-managed settings (see "Scaling" above).
